@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../models/cart.dart';
@@ -46,7 +46,8 @@ class _CartScreenState extends State<CartScreen> {
     return Product(
       id: item.id,
       title: item.title,
-      description: 'High-quality ${item.title}. Available now in your cart with ${item.discountPercentage}% discount.',
+      description:
+          'High-quality ${item.title}. Available now in your cart with ${item.discountPercentage}% discount.',
       category: 'Cart Item',
       price: item.price,
       discountPercentage: item.discountPercentage,
@@ -99,7 +100,8 @@ class _CartScreenState extends State<CartScreen> {
             quantity: newQty,
             total: item.price * newQty,
             discountPercentage: item.discountPercentage,
-            discountedTotal: (item.price * (1 - item.discountPercentage / 100)) * newQty,
+            discountedTotal:
+                (item.price * (1 - item.discountPercentage / 100)) * newQty,
             thumbnail: item.thumbnail,
           );
 
@@ -118,7 +120,8 @@ class _CartScreenState extends State<CartScreen> {
 
   double get _calculatedDiscountedTotal {
     if (_currentCart == null) return 0.0;
-    return _currentCart!.products.fold(0.0, (sum, item) => sum + item.discountedTotal);
+    return _currentCart!.products
+        .fold(0.0, (sum, item) => sum + item.discountedTotal);
   }
 
   @override
@@ -128,7 +131,8 @@ class _CartScreenState extends State<CartScreen> {
     final cartContent = FutureBuilder<Cart>(
       future: _cartFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && _currentCart == null) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _currentCart == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -168,7 +172,8 @@ class _CartScreenState extends State<CartScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.shopping_cart_outlined, size: 64.sp, color: Colors.grey),
+                Icon(Icons.shopping_cart_outlined,
+                    size: 64.sp, color: Colors.grey),
                 SizedBox(height: 16.h),
                 CustomText(
                   text: 'Your cart is empty',
@@ -227,15 +232,18 @@ class _CartScreenState extends State<CartScreen> {
                               child: Container(
                                 width: 70.w,
                                 height: 70.h,
-                                color: theme.colorScheme.surfaceContainerHighest,
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
                                 child: item.thumbnail.isNotEmpty
                                     ? Image.network(
                                         item.thumbnail,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            Icon(Icons.image, size: 30.sp),
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Icon(Icons.image, size: 30.sp),
                                       )
-                                    : Icon(Icons.image_not_supported, size: 30.sp),
+                                    : Icon(Icons.image_not_supported,
+                                        size: 30.sp),
                               ),
                             ),
                             SizedBox(width: 12.w),
@@ -260,7 +268,8 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                   SizedBox(height: 2.h),
                                   CustomText(
-                                    text: '${item.discountPercentage.toStringAsFixed(0)}% off • \$${item.discountedTotal.toStringAsFixed(2)} total',
+                                    text:
+                                        '${item.discountPercentage.toStringAsFixed(0)}% off • \$${item.discountedTotal.toStringAsFixed(2)} total',
                                     fontSize: 11.sp,
                                     color: Colors.grey,
                                   ),
@@ -271,7 +280,8 @@ class _CartScreenState extends State<CartScreen> {
                             // Quantity Stepper Controls
                             Container(
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                color: theme.colorScheme.surfaceContainerHighest
+                                    .withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
                               child: Column(
@@ -286,11 +296,13 @@ class _CartScreenState extends State<CartScreen> {
                                         color: Color(0xFFF5A623),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(Icons.add, size: 14.sp, color: Colors.white),
+                                      child: Icon(Icons.add,
+                                          size: 14.sp, color: Colors.white),
                                     ),
                                   ),
                                   Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 4.h, horizontal: 8.w),
                                     child: CustomText(
                                       text: '${item.quantity}',
                                       fontSize: 13.sp,
@@ -306,7 +318,8 @@ class _CartScreenState extends State<CartScreen> {
                                         color: Color(0xFFF5A623),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(Icons.remove, size: 14.sp, color: Colors.white),
+                                      child: Icon(Icons.remove,
+                                          size: 14.sp, color: Colors.white),
                                     ),
                                   ),
                                 ],
@@ -324,7 +337,8 @@ class _CartScreenState extends State<CartScreen> {
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(20.r)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.06),
@@ -362,7 +376,8 @@ class _CartScreenState extends State<CartScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                           CustomText(
-                            text: '\$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
+                            text:
+                                '\$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFFF5A623),
@@ -383,7 +398,8 @@ class _CartScreenState extends State<CartScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                                 content: CustomText(
-                                  text: 'Thank you for your order! Total amount: \$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
+                                  text:
+                                      'Thank you for your order! Total amount: \$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
                                   fontSize: 14,
                                 ),
                                 actions: [
@@ -443,3 +459,4 @@ class _CartScreenState extends State<CartScreen> {
     return cartContent;
   }
 }
+
