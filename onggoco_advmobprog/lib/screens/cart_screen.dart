@@ -328,8 +328,9 @@ class _CartScreenState extends State<CartScreen> {
                           ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  );
+                },
                 ),
               ),
               // Bottom Checkout / Order Summary Card
