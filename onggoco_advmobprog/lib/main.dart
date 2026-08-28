@@ -50,7 +50,7 @@ class OnggocoAdvMobProg extends StatelessWidget {
             initialRoute: '/home',
             routes: {
               // ENHANCEMENT 1: Cart route for loading the carts API screen
-              '/cart': (context) => const CartScreen(),
+              '/cart': (context) => const CartScreen(isStandalone: true),
               // ENHANCEMENT 3: Route to settings page
               '/home': (context) => const HomeScreen(),
               '/settings': (context) => const SettingsScreen(),

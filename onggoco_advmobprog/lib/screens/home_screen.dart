@@ -112,14 +112,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
           actions: [
             // --------------------------------------------------------------
-            // ENHANCEMENT 1: Cart button on navbar/top appbar
+            // ENHANCEMENT 1: Cart icon on top AppBar (hidden when already on Cart tab)
             // --------------------------------------------------------------
-            IconButton(
-              icon: Icon(Icons.shopping_cart_outlined, size: 24.sp),
-              onPressed: () {
-                _onItemTapped(1);
-              },
-            ),
+            if (_selectedIndex != 1)
+              IconButton(
+                icon: Icon(Icons.shopping_cart_outlined, size: 24.sp),
+                onPressed: () {
+                  _onItemTapped(1);
+                },
+              ),
             // ENHANCEMENT 3: Access settings page from the top-right icon
             IconButton(
               icon: Icon(Icons.settings, size: 24.sp),
@@ -139,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Tab 0: Product catalog screen
             const ProductScreen(),
             // Tab 1: Cart Screen (Enhancement 1 & 3)
-            const CartScreen(),
+            const CartScreen(isStandalone: false),
             // Tab 2: Profile Screen
             Center(
               child: CustomText(
