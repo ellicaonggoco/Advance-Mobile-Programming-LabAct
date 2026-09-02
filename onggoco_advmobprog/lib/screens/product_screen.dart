@@ -111,9 +111,27 @@ class _ProductScreenState extends State<ProductScreen> {
                   return Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.r),
-                      child: CustomText(
-                        text: 'Error: ${snapshot.error}',
-                        fontSize: 14.sp,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.wifi_off, size: 40.sp, color: Colors.grey),
+                          SizedBox(height: 8.h),
+                          CustomText(
+                            text: 'Unable to load products.',
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          SizedBox(height: 8.h),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _productsFuture =
+                                    ProductService().getAllProducts();
+                              });
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     ),
                   );
