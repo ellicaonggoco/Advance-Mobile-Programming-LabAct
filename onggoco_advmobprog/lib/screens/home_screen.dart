@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'cart_screen.dart';
 import 'product_screen.dart';
@@ -93,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 2,
+          backgroundColor: _selectedIndex == 1 ? const Color(0xFF354593) : null,
           title: _selectedIndex == 0
               ? Image.asset(
                   'assets/images/nubdexchange_logo.png',
@@ -108,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? 'Cart'
                       : 'Profile',
                   fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
+                  color: _selectedIndex == 1 ? Colors.white : null,
                 ),
           actions: [
             // --------------------------------------------------------------
@@ -123,7 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             // ENHANCEMENT 3: Access settings page from the top-right icon
             IconButton(
-              icon: Icon(Icons.settings, size: 24.sp),
+              icon: Icon(
+                Icons.settings,
+                size: 24.sp,
+                color: _selectedIndex == 1 ? Colors.white : null,
+              ),
               onPressed: () => Navigator.pushNamed(context, '/settings'),
             ),
           ],
@@ -157,10 +163,12 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
+          selectedItemColor: const Color(0xFF354593),
+          unselectedItemColor: Colors.grey.shade600,
           onTap: _onItemTapped,
           currentIndex: _selectedIndex,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.shop_2), label: 'Shop'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), label: 'Shop'),
             BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],

@@ -18,11 +18,11 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   // --------------------------------------------------------------
   // ENHANCEMENT 3: Read Cart documentation https://dummyjson.com/docs/carts
-  // Integrate cart by user ID to render only one user cart.
+  // Integrate cart by user id (User ID: 1 => Blue Frock, Generic Motorcycle, iPhone 6, Baseball Ball)
   // --------------------------------------------------------------
   late Future<Cart> _cartFuture;
   Cart? _currentCart;
-  final int _userId = 5; // Single user cart integration
+  final int _userId = 1; // Exactly matches professor's dataset in the screenshot
 
   @override
   void initState() {
@@ -31,9 +31,9 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _loadUserCart() {
-    // Enhancement 3: Fetching cart for a single user (User ID: 5)
+    // Enhancement 3: Fetching cart for User ID 1 (Cart ID 1)
     _cartFuture = CartService().getCartByUserId(_userId).catchError((_) {
-      // Fallback to getCartById(1) if specific user endpoint format differs
+      // Fallback to getCartById(1)
       return CartService().getCartById(1);
     });
   }
@@ -208,9 +208,6 @@ class _CartScreenState extends State<CartScreen> {
                       ],
                     ),
                     child: InkWell(
-                      // --------------------------------------------------------------
-                      // ENHANCEMENT 1: Cart item is clickable and navigates to detail_screen
-                      // --------------------------------------------------------------
                       onTap: () {
                         Navigator.push(
                           context,
@@ -237,7 +234,7 @@ class _CartScreenState extends State<CartScreen> {
                                 child: item.thumbnail.isNotEmpty
                                     ? Image.network(
                                         item.thumbnail,
-                                        fit: BoxFit.cover,
+                                        fit: BoxFit.contain,
                                         errorBuilder:
                                             (context, error, stackTrace) =>
                                                 Icon(Icons.image, size: 30.sp),
@@ -263,13 +260,13 @@ class _CartScreenState extends State<CartScreen> {
                                   CustomText(
                                     text: '\$${item.price.toStringAsFixed(2)}',
                                     fontSize: 14.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFF5A623),
                                   ),
                                   SizedBox(height: 2.h),
                                   CustomText(
                                     text:
-                                        '${item.discountPercentage.toStringAsFixed(0)}% off • \$${item.discountedTotal.toStringAsFixed(2)} total',
+                                        '${item.discountPercentage.toStringAsFixed(0)}% off • \$${item.total.toStringAsFixed(2)} total',
                                     fontSize: 11.sp,
                                     color: Colors.grey,
                                   ),
@@ -277,27 +274,27 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ),
                             SizedBox(width: 8.w),
-                            // Quantity Stepper Controls
+                            // Quantity Stepper Controls matching the design
                             Container(
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainerHighest
                                     .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(20.r),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   InkWell(
                                     onTap: () => _updateQuantity(item, 1),
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(8.r),
                                     child: Container(
                                       padding: EdgeInsets.all(4.r),
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF5A623),
-                                        shape: BoxShape.circle,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF5A623),
+                                        borderRadius: BorderRadius.circular(8.r),
                                       ),
                                       child: Icon(Icons.add,
-                                          size: 14.sp, color: Colors.white),
+                                          size: 16.sp, color: Colors.white),
                                     ),
                                   ),
                                   Padding(
@@ -311,15 +308,15 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                   InkWell(
                                     onTap: () => _updateQuantity(item, -1),
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(8.r),
                                     child: Container(
                                       padding: EdgeInsets.all(4.r),
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF5A623),
-                                        shape: BoxShape.circle,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(8.r),
                                       ),
                                       child: Icon(Icons.remove,
-                                          size: 14.sp, color: Colors.white),
+                                          size: 16.sp, color: Colors.grey.shade700),
                                     ),
                                   ),
                                 ],
@@ -331,110 +328,110 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   );
                 },
-                ),
               ),
-              // Bottom Checkout / Order Summary Card
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(20.r)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, -4),
+            ),
+            // Bottom Checkout / Order Summary Card
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(20.r)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CustomText(
+                          text: 'Subtotal:',
+                          fontSize: 13.sp,
+                          color: Colors.grey,
+                        ),
+                        CustomText(
+                          text: '\$${_calculatedTotal.toStringAsFixed(2)}',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFF5A623),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CustomText(
+                          text: 'Delivery Fee:',
+                          fontSize: 13.sp,
+                          color: Colors.grey,
+                        ),
+                        CustomText(
+                          text: '\$0.00',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFF5A623),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 14.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const CustomText(
+                                text: 'Order Confirmed!',
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              content: CustomText(
+                                text:
+                                    'Thank you for your order! Total amount: \$${_calculatedTotal.toStringAsFixed(2)}',
+                                fontSize: 14,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF5A623),
+                          foregroundColor: Colors.black87,
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: CustomText(
+                          text: 'Confirm Order',
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CustomText(
-                            text: 'Subtotal',
-                            fontSize: 13.sp,
-                            color: Colors.grey,
-                          ),
-                          CustomText(
-                            text: '\$${_calculatedTotal.toStringAsFixed(2)}',
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 6.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CustomText(
-                            text: 'Discounted Total',
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          CustomText(
-                            text:
-                                '\$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFF5A623),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 14.h),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const CustomText(
-                                  text: 'Order Confirmed!',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                content: CustomText(
-                                  text:
-                                      'Thank you for your order! Total amount: \$${_calculatedDiscountedTotal.toStringAsFixed(2)}',
-                                  fontSize: 14,
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF5A623),
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: CustomText(
-                            text: 'Confirm Order',
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
-            ],
-          );
+            ),
+          ],
+        );
       },
     );
 
