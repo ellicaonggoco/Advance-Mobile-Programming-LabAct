@@ -1,4 +1,4 @@
-﻿# Lab Activity 2: API & State Management
+# Lab Activity 2: API & State Management
 
 ## Discussion
 
@@ -72,7 +72,7 @@ In this activity, the **Service-Model-Provider** architectural design pattern is
 - **Services (`/services`)**:  
   Contains `cart_service.dart` and `product_service.dart`. Isolates remote API communications, URL parameters, headers, and error handling away from widget code.
 - **Providers (`/providers`)**:  
-  Contains `theme_provider.dart`. Manages global application state (Dark Mode / Light Mode) reactively using `ChangeNotifier` and `notifyListeners()`.
+  Contains `theme_provider.dart` and `cart_provider.dart`. Manages global application state (Dark Mode / Light Mode and Cart state reactivity across Home and Cart screens) reactively using `ChangeNotifier` and `notifyListeners()`.
 - **Screens (`/screens`)**:  
   Contains `home_screen.dart`, `product_screen.dart`, `cart_screen.dart`, `detail_screen.dart`, and `settings_screen.dart`. Focuses on presentation, user interactions, and view navigation.
 - **Widgets (`/widgets`)**:  

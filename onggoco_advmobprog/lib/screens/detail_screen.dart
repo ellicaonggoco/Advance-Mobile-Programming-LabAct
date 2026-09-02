@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
-import '../services/cart_service.dart';
+import '../providers/cart_provider.dart';
 import '../widgets/custom_text.dart';
 
 // --------------------------------------------------------------
@@ -24,6 +25,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   // --------------------------------------------------------------
   // ENHANCEMENT 3: Add to cart by passing product values (https://dummyjson.com/carts/add)
+  // Updates CartProvider for live UI reactivity across Home and Cart!
   // --------------------------------------------------------------
   Future<void> _handleAddToCart() async {
     setState(() {
@@ -31,22 +33,16 @@ class _DetailScreenState extends State<DetailScreen> {
     });
 
     try {
-      final response = await CartService().addToCart(
-        userId: 1,
-        products: [
-          {
-            'id': widget.product.id,
-            'quantity': 1,
-          }
-        ],
-      );
+      // Add to shared CartProvider for real-time app update
+      await Provider.of<CartProvider>(context, listen: false)
+          .addToCart(widget.product, quantity: 1);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.green.shade700,
             content: CustomText(
-              text: 'Added "${widget.product.title}" to cart! (Cart ID: ${response['id'] ?? 1})',
+              text: 'Added "${widget.product.title}" to cart!',
               color: Colors.white,
               fontSize: 13.sp,
             ),

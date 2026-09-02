@@ -11,6 +11,7 @@ import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 
 // providers
+import 'providers/cart_provider.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -33,8 +34,11 @@ class OnggocoAdvMobProg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()..loadCart()),
+      ],
       child: ScreenUtilInit(
         designSize: const Size(412, 715),
         minTextAdapt: true,

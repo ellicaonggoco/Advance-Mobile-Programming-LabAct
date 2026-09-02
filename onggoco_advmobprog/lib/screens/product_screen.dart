@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 // models
 import '../models/product.dart';
+
+// providers
+import '../providers/cart_provider.dart';
 
 // services
 import '../services/product_service.dart';
@@ -188,10 +192,53 @@ class _ProductScreenState extends State<ProductScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   SizedBox(height: 4.h),
-                                  CustomText(
-                                    text: '\$${product.price.toStringAsFixed(2)}',
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w600,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      CustomText(
+                                        text:
+                                            '\$${product.price.toStringAsFixed(2)}',
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          context
+                                              .read<CartProvider>()
+                                              .addToCart(product);
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              backgroundColor:
+                                                  Colors.green.shade700,
+                                              content: CustomText(
+                                                text:
+                                                    'Added "${product.title}" to cart!',
+                                                color: Colors.white,
+                                                fontSize: 13.sp,
+                                              ),
+                                              duration:
+                                                  const Duration(seconds: 1),
+                                            ),
+                                          );
+                                        },
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                        child: Container(
+                                          padding: EdgeInsets.all(5.r),
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFF5A623),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.add_shopping_cart,
+                                            size: 14.sp,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
