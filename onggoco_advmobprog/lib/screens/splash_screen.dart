@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return Image.asset(
-                      'assets/images/nuicon.jpeg',
+                      'assets/images/nuicon.png',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
