@@ -103,30 +103,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 letterSpacing: 0.5,
                 color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
-              SizedBox(height: 6.h),
-              CustomText(
-                text: 'National University E-Commerce Portal',
-                fontSize: 12.sp,
-                color: Colors.grey.shade500,
-                letterSpacing: 0.2,
-              ),
               const Spacer(flex: 2),
-              // Loading indicator
-              SizedBox(
-                width: 28.w,
-                height: 28.w,
-                child: const CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF354593)),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              CustomText(
-                text: 'Checking authentication...',
-                fontSize: 12.sp,
-                color: Colors.grey.shade400,
-              ),
-              const Spacer(),
             ],
           ),
         ),

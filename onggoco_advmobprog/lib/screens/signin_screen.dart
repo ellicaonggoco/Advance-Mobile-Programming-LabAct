@@ -142,14 +142,6 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 6.h),
-                  Center(
-                    child: CustomText(
-                      text: 'Sign in to access your NUBD Exchange account',
-                      fontSize: 12.sp,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
                   SizedBox(height: 32.h),
 
                   // Username field
@@ -284,41 +276,6 @@ class _SigninScreenState extends State<SigninScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Hint Chip for DummyJSON testing
-                  Center(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5A623).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20.r),
-                        border: Border.all(
-                          color: const Color(0xFFF5A623).withValues(alpha: 0.35),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 14.sp,
-                            color: const Color(0xFFB47206),
-                          ),
-                          SizedBox(width: 6.w),
-                          CustomText(
-                            text: 'Demo credentials: emilys / emilyspass',
-                            fontSize: 11.sp,
-                            color: const Color(0xFFB47206),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
