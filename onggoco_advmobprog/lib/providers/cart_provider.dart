@@ -1,17 +1,21 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/cart.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/user_service.dart';
 
 class CartProvider with ChangeNotifier {
   final CartService _cartService = CartService();
+  final UserService _userService = UserService();
   Cart? _cart;
   bool _isLoading = false;
   String? _errorMessage;
+  int _currentUserId = 1;
 
   Cart? get cart => _cart;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  int get currentUserId => _currentUserId;
 
   double get subtotal {
     if (_cart == null) return 0.0;
@@ -29,16 +33,26 @@ class CartProvider with ChangeNotifier {
   }
 
   // --------------------------------------------------------------
-  // Load initial cart data (User ID: 1 as required by assignment)
+  // ENHANCEMENT 3: Based on the saved user data render the cart by userId
   // --------------------------------------------------------------
-  Future<void> loadCart() async {
+  Future<void> loadCart([int? userId]) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _cart = await _cartService.getCartByUserId(1).catchError((_) {
-        return _cartService.getCartById(1);
+      int targetUserId = userId ?? _currentUserId;
+      if (userId == null) {
+        final userData = await _userService.getUserData();
+        final savedId = userData['id'] as int? ?? 0;
+        if (savedId > 0) {
+          targetUserId = savedId;
+        }
+      }
+      _currentUserId = targetUserId;
+
+      _cart = await _cartService.getCartByUserId(_currentUserId).catchError((_) {
+        return _cartService.getCartById(_currentUserId);
       });
     } catch (e) {
       _errorMessage = e.toString();
@@ -52,17 +66,15 @@ class CartProvider with ChangeNotifier {
   // ENHANCEMENT 3: Add product to cart & dynamically update state
   // --------------------------------------------------------------
   Future<void> addToCart(Product product, {int quantity = 1}) async {
-    if (_cart == null) {
-      _cart = Cart(
-        id: 1,
-        products: [],
-        total: 0.0,
-        discountedTotal: 0.0,
-        userId: 1,
-        totalProducts: 0,
-        totalQuantity: 0,
-      );
-    }
+    _cart ??= Cart(
+      id: 1,
+      products: [],
+      total: 0.0,
+      discountedTotal: 0.0,
+      userId: _currentUserId,
+      totalProducts: 0,
+      totalQuantity: 0,
+    );
 
     final existingIndex = _cart!.products.indexWhere((p) => p.id == product.id);
 
@@ -107,7 +119,7 @@ class CartProvider with ChangeNotifier {
     // Asynchronously send to DummyJSON backend
     try {
       await _cartService.addToCart(
-        userId: 1,
+        userId: _currentUserId,
         products: [
           {
             'id': product.id,

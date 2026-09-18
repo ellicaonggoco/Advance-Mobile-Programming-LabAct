@@ -148,3 +148,108 @@ The DummyJSON API provides specialized endpoints to query cart data by specific 
 - **Enhancement 1**: Built `cart_screen.dart` rendering the `/carts` API endpoint, where each cart item is clickable and navigates to the shared `detail_screen.dart`.
 - **Enhancement 2**: Implemented Chat as a `FloatingActionButton` on `home_screen.dart`, which is dynamically hidden when viewing the `cart_screen` tab.
 - **Enhancement 3**: Integrated single-user cart querying via `getCartByUserId` and implemented the "Add to Cart" functionality via `POST /carts/add` on `detail_screen.dart`.
+
+---
+
+# Lab Activity 4: API Part III & Persistent Authentication
+
+## Discussion
+
+### 1. How User Model, Services, and Screen Interact to Render the API Endpoint Going to `profile_screen.dart`
+
+1. **Model Layer (`models/user.dart`)**  
+   - The `User` model encapsulates user profile information returned from the authentication endpoint (`https://dummyjson.com/auth/login`) and local session storage.  
+   - It defines strong typing for all essential attributes: `id`, `username`, `email`, `firstName`, `lastName`, `gender`, `image`, `accessToken`, and `refreshToken`.  
+   - `User.fromJson(Map<String, dynamic> json)` dynamically deserializes both the API authentication payload and the cached `SharedPreferences` dictionary, guaranteeing type-safe access across the application.  
+   *(Ang `User` model ang nagko-convert at nag-iistruktura sa raw data na galing sa API login endpoint at sa local storage upang maging type-safe Dart object na magagamit sa buong application tulad ng pagpapakita ng profile details.)*
+
+2. **Service Layer (`services/user_service.dart`)**  
+   - `loginUser(String username, String password)`: Sends a `POST` request to `$host/auth/login` containing user credentials. Upon receiving HTTP 200, it parses the JSON response and immediately caches the credentials and profile attributes via `saveUserData(data)`.  
+   - `saveUserData(Map<String, dynamic> userData)`: Serializes user attributes (`id`, `username`, `email`, `firstName`, `lastName`, `gender`, `image`, `accessToken`, `refreshToken`, `token`) into disk-persistent local storage using `SharedPreferences`.  
+   - `getUserData()` & `getUser()`: Asynchronously reads the stored user attributes from `SharedPreferences` and re-constructs the strongly-typed `User` model without needing another remote network round-trip.  
+   - `isLoggedIn()`: Validates whether a non-empty `accessToken` or `token` exists in persistent storage.  
+   - `logout()`: Clears the persistent session data via `prefs.clear()`.  
+   *(Nasa `UserService` ang networking logic para sa authentication at ang pag-persist ng session data gamit ang `SharedPreferences`. Dito iniimbak ang token at profile ng user sa storage upang manatiling naka-login kahit i-restart ang app, at dito rin kinukuha ang cached data para i-render ang profile screen nang mabilis.)*
+
+3. **Screen Layer (`screens/splash_screen.dart`, `screens/signin_screen.dart`, and `screens/profile_screen.dart`)**  
+   - **`splash_screen.dart`**: Acts as the gatekeeper upon application launch. Its `_checkAuthentication()` method awaits 1500ms and queries `_userService.isLoggedIn()`. If authenticated, it navigates directly to `/home` with the cached user payload; otherwise, it directs the user to `/signin`.  
+   - **`signin_screen.dart`**: Formulates the credentials input form, validates inputs, and triggers `_login()`, handling loading spinners and error feedback via `SnackBar`.  
+   - **`profile_screen.dart`**: Consumes the `User` model (either from navigation arguments or `_userService.getUser()`) to render the user's avatar, full name, `@username`, and information cards for `Email`, `Gender`, and `User ID`. It also provides the "Log Out" action that invokes `_userService.logout()` and resets navigation back to `/signin`.  
+   *(Ang UI layer ang nagpapakita ng visual flow: chine-check ng splash screen kung may valid session, pinapapasok ang user sa sign-in screen kapag wala, at ipinapakita ang buong detalye ng user sa profile screen gamit ang data mula sa User model.)*
+
+---
+
+### 2. Discussion on the Updated Design Pattern in this Activity
+
+In this activity, the **Service-Model-Provider** architectural pattern is upgraded to incorporate **Persistent Local State & Session Management**:
+
+- **Model Layer (`/models`)**:  
+  Houses domain models (`user.dart`, `cart.dart`, `product.dart`). Implements JSON serialization/deserialization for clean boundary conversions.
+- **Service Layer (`/services`)**:  
+  Houses remote networking and persistence logic (`user_service.dart`, `cart_service.dart`, `product_service.dart`). Manages RESTful HTTP communication, endpoint headers, error throwing, and direct interaction with the device's native key-value storage via `SharedPreferences`.
+- **Provider Layer (`/providers`)**:  
+  Manages reactive in-memory application state (`cart_provider.dart` and `theme_provider.dart`). Providers listen to changes and broadcast state updates reactively across widgets.
+- **Screen Layer (`/screens`)**:  
+  Comprises `splash_screen.dart`, `signin_screen.dart`, `home_screen.dart`, `product_screen.dart`, `cart_screen.dart`, `detail_screen.dart`, `profile_screen.dart`, and `settings_screen.dart`. Screens observe providers and consume services to present UI layouts adhering strictly to user interaction states.
+- **Widget Layer (`/widgets`)**:  
+  Provides standardized reusable design elements (such as `custom_text.dart`) to ensure consistent typography and design system compliance.
+
+#### Architectural Advantages:
+1. **Session Continuity**: Local persistence decouples user authentication state from ephemeral memory, giving users persistent access across app restarts.
+2. **Decoupled Responsibilities**: Screens never interact directly with raw HTTP or low-level preference APIs; all transactions are routed through models and services.
+3. **Data Integrity & Robustness**: Null-safe parsing in models guarantees that missing backend attributes do not cause application-wide runtime crashes.
+
+---
+
+### 3. Discussion on How to Use the Saved Data in Rendering the `cart_screen.dart` by User ID
+
+1. **Retrieving the Active User ID**:  
+   Upon successful login or during the initialization of `home_screen.dart`, the user's details are retrieved from `SharedPreferences` through `UserService().getUserData()` (or `UserService().getUser()`). This yields the logged-in user's numeric `id` (e.g., `userId = 1` for Emily Johnson).
+   ```dart
+   final userData = await _userService.getUserData();
+   final int userId = userData['id'] ?? 1;
+   ```
+
+2. **Passing `userId` to `CartProvider`**:  
+   Rather than hardcoding a static cart identifier, `CartProvider.loadCart([int? userId])` dynamically scopes the cart query to the authenticated account:
+   ```dart
+   Future<void> loadCart([int? userId]) async {
+     int targetUserId = userId ?? _currentUserId;
+     if (userId == null) {
+       final userData = await _userService.getUserData();
+       final savedId = userData['id'] as int? ?? 0;
+       if (savedId > 0) targetUserId = savedId;
+     }
+     _currentUserId = targetUserId;
+     _cart = await _cartService.getCartByUserId(_currentUserId);
+     notifyListeners();
+   }
+   ```
+
+3. **Querying the User Cart Endpoint**:  
+   `CartService.getCartByUserId(userId)` queries `https://dummyjson.com/carts/user/{userId}`:
+   ```dart
+   Future<Cart> getCartByUserId(int userId) async {
+     final response = await http.get(Uri.parse('$host/carts/user/$userId'));
+     if (response.statusCode == 200) {
+       final Map<String, dynamic> data = jsonDecode(response.body);
+       final List cartsJson = data['carts'] ?? [];
+       if (cartsJson.isNotEmpty) {
+         return Cart.fromJson(cartsJson.first);
+       }
+       throw Exception('No cart found for user ID: $userId');
+     }
+     throw Exception('Failed to load cart for user ID: $userId');
+   }
+   ```
+
+4. **Dynamic Cart Rendering**:  
+   `CartScreen` observes `CartProvider` using `context.watch<CartProvider>()`. When `loadCart(userId)` finishes, `notifyListeners()` triggers an automatic rebuild of the cart UI, instantly displaying the specific items, quantities, and subtotal belonging to that authenticated user.
+
+---
+
+### Enhancements Implemented Summary:
+- **Enhancement 1**: Designed and implemented custom UI for `splash_screen.dart` displaying National University / NUBD Exchange branding, incorporating `_checkAuthentication()` for seamless persistent session navigation.
+- **Enhancement 2**: Built branded UI for `signin_screen.dart` with username/password validation, `_login()` authentication handling, SnackBar notifications, and demo credentials assistance.
+- **Enhancement 3**: Created `models/user.dart` and implemented `profile_screen.dart` showcasing avatar, name, handle, email, gender, user ID, and a functional log out routine. Configured `CartProvider` and `HomeScreen` to dynamically fetch and render the user's specific cart by `userId`.
+

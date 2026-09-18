@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'cart_screen.dart';
 import 'product_screen.dart';
+import 'profile_screen.dart';
+import '../models/user.dart';
+import '../providers/cart_provider.dart';
+import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,6 +20,45 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _initUserData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic> && _currentUser == null) {
+      final user = User.fromJson(args);
+      setState(() {
+        _currentUser = user;
+      });
+      if (user.id > 0) {
+        context.read<CartProvider>().loadCart(user.id);
+      }
+    }
+  }
+
+  // --------------------------------------------------------------
+  // ENHANCEMENT 3: Retrieve saved user data and render cart by userId
+  // --------------------------------------------------------------
+  Future<void> _initUserData() async {
+    try {
+      final user = await UserService().getUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
+        if (user.id > 0) {
+          context.read<CartProvider>().loadCart(user.id);
+        }
+      }
+    } catch (_) {}
+  }
 
   // --------------------------------------------------------------
   // ENHANCEMENT 2: Make the chat bottom navigation as FloatingActionButton.
@@ -107,7 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
               : CustomText(
                   text: _selectedIndex == 1
                       ? 'Cart'
-                      : 'Profile',
+                      : (_currentUser != null && _currentUser!.firstName.isNotEmpty
+                          ? _currentUser!.firstName
+                          : 'Emily'),
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: _selectedIndex == 1 ? Colors.white : null,
@@ -147,13 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const ProductScreen(),
             // Tab 1: Cart Screen (Enhancement 1 & 3)
             const CartScreen(isStandalone: false),
-            // Tab 2: Profile Screen
-            Center(
-              child: CustomText(
-                text: 'Profile Page',
-                fontSize: 18.sp,
-              ),
-            ),
+            // Tab 2: Profile Screen (Enhancement 3)
+            ProfileScreen(initialUser: _currentUser),
           ],
         ),
         // --------------------------------------------------------------

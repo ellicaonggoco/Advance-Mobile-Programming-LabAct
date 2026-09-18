@@ -8,7 +8,10 @@ import 'package:provider/provider.dart';
 // screens
 import 'screens/cart_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/signin_screen.dart';
+import 'screens/splash_screen.dart';
 
 // providers
 import 'providers/cart_provider.dart';
@@ -51,13 +54,20 @@ class OnggocoAdvMobProg extends StatelessWidget {
             darkTheme: themeModel.darkTheme,
             themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
             title: 'E-Commerce App',
-            initialRoute: '/home',
+            initialRoute: '/splash',
             routes: {
-              // ENHANCEMENT 1: Cart route for loading the carts API screen
-              '/cart': (context) => const CartScreen(isStandalone: true),
-              // ENHANCEMENT 3: Route to settings page
+              // ENHANCEMENT 1: Splash screen with persistent authentication
+              '/splash': (context) => const SplashScreen(),
+              // ENHANCEMENT 2: Sign-in screen with login & auth logic
+              '/signin': (context) => const SigninScreen(),
+              // Main Home Catalog & Navigation
               '/home': (context) => const HomeScreen(),
+              // Standalone Cart route
+              '/cart': (context) => const CartScreen(isStandalone: true),
+              // Settings page
               '/settings': (context) => const SettingsScreen(),
+              // ENHANCEMENT 3: Standalone Profile page
+              '/profile': (context) => const ProfileScreen(),
             },
           );
         },
