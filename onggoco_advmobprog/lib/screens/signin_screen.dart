@@ -23,7 +23,6 @@ class _SigninScreenState extends State<SigninScreen> {
       TextEditingController(text: 'emilyspass');
 
   bool _isLoading = false;
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -93,89 +92,53 @@ class _SigninScreenState extends State<SigninScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // App / University Logo
-                  Center(
-                    child: Container(
-                      width: 90.w,
-                      height: 90.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF354593).withValues(alpha: 0.12),
-                            blurRadius: 18,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.all(10.w),
-                      child: Image.asset(
-                        'assets/images/nu_logo.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.school,
-                            size: 48.sp,
-                            color: const Color(0xFF354593),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-                  // Welcome Header matching Sample Output
+                  // Welcome Header with inline NU logo matching Sample Output exactly
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.waving_hand,
-                        color: const Color(0xFFF5A623),
-                        size: 24.sp,
+                      Image.asset(
+                        'assets/images/nu_logo.png',
+                        height: 38.h,
+                        fit: BoxFit.contain,
                       ),
-                      SizedBox(width: 8.w),
+                      SizedBox(width: 10.w),
                       CustomText(
                         text: 'Welcome',
-                        fontSize: 26.sp,
+                        fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : const Color(0xFF1E293B),
                       ),
                     ],
                   ),
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 36.h),
 
-                  // Username field
+                  // Username field (no prefix icon, clean outline matching Sample Output)
                   TextFormField(
                     controller: _usernameController,
                     decoration: InputDecoration(
                       labelText: 'Username',
                       hintText: 'emilys',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      filled: true,
-                      fillColor: isDark
-                          ? theme.colorScheme.surfaceContainerHighest
-                          : Colors.grey.shade50,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
                         vertical: 14.h,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(
                           color: isDark
-                              ? Colors.grey.shade800
-                              : Colors.grey.shade300,
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade400,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: const BorderSide(
                           color: Color(0xFF354593),
-                          width: 1.8,
+                          width: 1.5,
                         ),
                       ),
                     ),
@@ -186,54 +149,35 @@ class _SigninScreenState extends State<SigninScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 18.h),
 
-                  // Password field
+                  // Password field (no prefix icon, no suffix icon, clean outline matching Sample Output)
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: _obscurePassword,
+                    obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          size: 20.sp,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? theme.colorScheme.surfaceContainerHighest
-                          : Colors.grey.shade50,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
                         vertical: 14.h,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide(
                           color: isDark
-                              ? Colors.grey.shade800
-                              : Colors.grey.shade300,
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade400,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: const BorderSide(
                           color: Color(0xFF354593),
-                          width: 1.8,
+                          width: 1.5,
                         ),
                       ),
                     ),
@@ -246,7 +190,7 @@ class _SigninScreenState extends State<SigninScreen> {
                   ),
                   SizedBox(height: 24.h),
 
-                  // Log in button
+                  // Log In button (capitalized Log In matching Sample Output)
                   ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
@@ -256,9 +200,9 @@ class _SigninScreenState extends State<SigninScreen> {
                           const Color(0xFF354593).withValues(alpha: 0.6),
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14.r),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      elevation: 1,
+                      elevation: 0,
                     ),
                     child: _isLoading
                         ? SizedBox(
@@ -271,7 +215,7 @@ class _SigninScreenState extends State<SigninScreen> {
                             ),
                           )
                         : CustomText(
-                            text: 'Log in',
+                            text: 'Log In',
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

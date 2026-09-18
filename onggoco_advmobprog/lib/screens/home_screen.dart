@@ -137,7 +137,9 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 2,
-          backgroundColor: _selectedIndex == 1 ? const Color(0xFF354593) : null,
+          backgroundColor: (_selectedIndex == 1 || _selectedIndex == 2)
+              ? const Color(0xFF354593)
+              : null,
           title: _selectedIndex == 0
               ? Image.asset(
                   'assets/images/nubdexchange_logo.png',
@@ -156,25 +158,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           : 'Emily'),
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
-                  color: _selectedIndex == 1 ? Colors.white : null,
+                  color: (_selectedIndex == 1 || _selectedIndex == 2)
+                      ? Colors.white
+                      : null,
                 ),
           actions: [
-            // --------------------------------------------------------------
-            // ENHANCEMENT 1: Cart icon on top AppBar (hidden when already on Cart tab)
-            // --------------------------------------------------------------
-            if (_selectedIndex != 1)
+            // Cart icon only shown on Shop catalog tab (tab 0)
+            if (_selectedIndex == 0)
               IconButton(
                 icon: Icon(Icons.shopping_cart_outlined, size: 24.sp),
                 onPressed: () {
                   _onItemTapped(1);
                 },
               ),
-            // ENHANCEMENT 3: Access settings page from the top-right icon
+            // Access settings page from the top-right icon
             IconButton(
               icon: Icon(
                 Icons.settings,
                 size: 24.sp,
-                color: _selectedIndex == 1 ? Colors.white : null,
+                color: (_selectedIndex == 1 || _selectedIndex == 2)
+                    ? Colors.white
+                    : null,
               ),
               onPressed: () => Navigator.pushNamed(context, '/settings'),
             ),

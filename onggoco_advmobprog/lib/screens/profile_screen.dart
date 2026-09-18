@@ -104,36 +104,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Theme.of(context).colorScheme.surfaceContainerHighest
-            : Colors.white,
-        borderRadius: BorderRadius.circular(14.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(
-          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-        ),
-      ),
       child: Row(
         children: [
-          Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5A623).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Icon(icon, size: 20.sp, color: const Color(0xFFD97706)),
+          Icon(
+            icon,
+            size: 20.sp,
+            color: const Color(0xFFF5A623),
           ),
-          SizedBox(width: 14.w),
+          SizedBox(width: 12.w),
           CustomText(
             text: label,
             fontSize: 14.sp,
@@ -179,33 +159,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final imageUrl = user?.image ?? '';
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: 12.h),
-          // User Avatar matching Sample Output
-          Center(
-            child: Stack(
-              alignment: Alignment.center,
+          // Profile Header Card matching Sample Output
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 24.h),
+            decoration: BoxDecoration(
+              color: isDark ? theme.cardColor : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
               children: [
+                // User Avatar
                 Container(
-                  width: 96.w,
-                  height: 96.w,
-                  decoration: BoxDecoration(
+                  width: 76.w,
+                  height: 76.w,
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF354593), Color(0xFF5B6FB8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF354593).withValues(alpha: 0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
                   ),
                   child: ClipOval(
                     child: imageUrl.isNotEmpty
@@ -215,80 +194,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(
                               Icons.person,
-                              size: 54,
-                              color: Colors.white,
+                              size: 48,
+                              color: Color(0xFF354593),
                             ),
                           )
-                        : const Icon(
-                            Icons.person,
-                            size: 54,
-                            color: Colors.white,
+                        : Image.network(
+                            'https://dummyjson.com/icon/emilys/128',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.person,
+                              size: 48,
+                              color: Color(0xFF354593),
+                            ),
                           ),
                   ),
+                ),
+                SizedBox(height: 12.h),
+                // Full Name
+                CustomText(
+                  text: displayName,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+                SizedBox(height: 4.h),
+                // Username handle in gold/yellow
+                CustomText(
+                  text: '@$username',
+                  fontSize: 13.sp,
+                  color: const Color(0xFFF5A623),
+                  fontWeight: FontWeight.w600,
                 ),
               ],
             ),
           ),
-          SizedBox(height: 14.h),
-          // Full Name
-          CustomText(
-            text: displayName,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
-          ),
-          SizedBox(height: 2.h),
-          // Username handle
-          CustomText(
-            text: '@$username',
-            fontSize: 13.sp,
-            color: const Color(0xFFF5A623),
-            fontWeight: FontWeight.w600,
-          ),
-          SizedBox(height: 26.h),
+          SizedBox(height: 16.h),
 
-          // Information Details List
-          _buildInfoRow(
-            icon: Icons.email_outlined,
-            label: 'Email',
-            value: email,
-            context: context,
-          ),
-          _buildInfoRow(
-            icon: Icons.wc_outlined,
-            label: 'Gender',
-            value: gender,
-            context: context,
-          ),
-          _buildInfoRow(
-            icon: Icons.badge_outlined,
-            label: 'User ID',
-            value: userId,
-            context: context,
+          // User Information Details Card matching Sample Output
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? theme.cardColor : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _buildInfoRow(
+                  icon: Icons.mail_outline,
+                  label: 'Email',
+                  value: email,
+                  context: context,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16.w,
+                  endIndent: 16.w,
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                ),
+                _buildInfoRow(
+                  icon: Icons.people_outline,
+                  label: 'Gender',
+                  value: gender,
+                  context: context,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16.w,
+                  endIndent: 16.w,
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                ),
+                _buildInfoRow(
+                  icon: Icons.badge_outlined,
+                  label: 'User ID',
+                  value: '#$userId',
+                  context: context,
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 24.h),
 
           // Log Out Button matching Sample Output
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _handleLogout,
-              icon: const Icon(Icons.logout, color: Colors.white),
-              label: CustomText(
-                text: 'Log Out',
-                fontSize: 15.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          ElevatedButton.icon(
+            onPressed: _handleLogout,
+            icon: const Icon(Icons.logout, color: Colors.white, size: 20),
+            label: CustomText(
+              text: 'Log Out',
+              fontSize: 15.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF5757),
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                elevation: 0,
-              ),
+              elevation: 0,
             ),
           ),
           SizedBox(height: 20.h),

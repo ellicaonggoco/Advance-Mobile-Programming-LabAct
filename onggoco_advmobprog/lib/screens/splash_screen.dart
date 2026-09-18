@@ -60,48 +60,31 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-              // National University Logo
-              Container(
-                width: 140.w,
-                height: 140.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF354593).withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.all(12.w),
-                child: Image.asset(
-                  'assets/images/nu_logo.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Image.asset(
-                      'assets/images/nuicon.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.school,
-                          size: 72.sp,
-                          color: const Color(0xFF354593),
-                        );
-                      },
-                    );
-                  },
-                ),
+              // National University Logo (transparent background matching Sample Output)
+              Image.asset(
+                'assets/images/nu_logo.png',
+                width: 125.w,
+                height: 125.w,
+                fit: BoxFit.contain,
               ),
               SizedBox(height: 24.h),
               // Brand text matching Sample Output: NUBD Exchange
               CustomText(
                 text: 'NUBD Exchange',
-                fontSize: 24.sp,
+                fontSize: 22.sp,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+                letterSpacing: 0.3,
                 color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+              SizedBox(height: 32.h),
+              // Gold progress indicator matching Sample Output
+              SizedBox(
+                width: 26.w,
+                height: 26.w,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF5A623)),
+                ),
               ),
               const Spacer(flex: 2),
             ],
