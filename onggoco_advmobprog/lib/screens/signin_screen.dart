@@ -17,10 +17,8 @@ class SigninScreen extends StatefulWidget {
 
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController =
-      TextEditingController(text: 'emilys');
-  final TextEditingController _passwordController =
-      TextEditingController(text: 'emilyspass');
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -117,7 +115,6 @@ class _SigninScreenState extends State<SigninScreen> {
                     controller: _usernameController,
                     decoration: InputDecoration(
                       labelText: 'Username',
-                      hintText: 'emilys',
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
                         vertical: 14.h,
