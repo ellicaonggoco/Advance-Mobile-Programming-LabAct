@@ -4,10 +4,9 @@ import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 // ==============================================================
-// ENHANCEMENT 2: Dummy JSON vs Firebase Auth
-// - DummyJSON: API call (https://dummyjson.com/auth/login)
-// - Firebase: Use FirebaseAuth SDK, token refresh, security rules
-// - Seamless login: Auto-detects Firebase Email or DummyJSON Username
+// ENHANCEMENT 2: Sign-in Screen (Page 18 ng PDF)
+// Smart login: Kusa niyang ina-analyze kung email (Firebase Auth)
+// or username lang (DummyJSON). Walang awkward toggle para realistic!
 // ==============================================================
 
 class SigninScreen extends StatefulWidget {
@@ -19,6 +18,7 @@ class SigninScreen extends StatefulWidget {
 
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  // Iisang field para sa username o email
   final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -32,6 +32,7 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
+  // Dito yung smart login logic natin
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -46,14 +47,14 @@ class _SigninScreenState extends State<SigninScreen> {
       Map<String, dynamic> responseData;
 
       if (identifier.contains('@')) {
-        // Authenticate with Firebase Auth SDK (PDF Page 18)
+        // May '@' -> Firebase email account to! Tawagin yung Firebase Auth SDK
         await userService.value.signIn(
           email: identifier,
           password: password,
         );
         responseData = await userService.value.getUserData();
       } else {
-        // Authenticate with DummyJSON API (PDF Page 18)
+        // Walang '@' -> DummyJSON username to (e.g. emilys), tawagin yung REST API
         responseData = await userService.value.loginUser(
           identifier,
           password,

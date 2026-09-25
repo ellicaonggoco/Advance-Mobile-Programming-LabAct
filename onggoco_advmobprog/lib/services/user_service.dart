@@ -17,19 +17,24 @@ class UserService {
   Stream<fb.User?> get authStateChanges => firebaseAuth.authStateChanges();
 
   // --------------------------------------------------------------
-  // ENHANCEMENT 1 & 2: Firebase Authentication Methods (PDF Page 17)
+  // ENHANCEMENT 1: Firebase Authentication Methods (Page 17 ng PDF)
   // --------------------------------------------------------------
+
+  // Sign in function gamit yung official Firebase Auth SDK
   Future<fb.UserCredential> signIn({
     required String email,
     required String password,
   }) async {
+    // Tawagin yung built-in method ng FirebaseAuth
     final credential = await firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+    
+    // I-mark natin na 'firebase' ang login type para sa Profile screen
     await setLoginType('firebase');
 
-    // Save basic Firebase user info to SharedPreferences for offline/persistence
+    // Sine-save din natin sa SharedPreferences para persistent kahit i-close yung app
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('email', credential.user?.email ?? email);
     await prefs.setString(
@@ -42,6 +47,7 @@ class UserService {
     return credential;
   }
 
+  // Dito nag-reregister ng bagong account sa Firebase Cloud
   Future<fb.UserCredential> createAccount({
     required String email,
     required String password,
@@ -51,25 +57,30 @@ class UserService {
       email: email,
       password: password,
     );
+    // Pag may nilagay na display name / username, i-update agad sa Firebase profile
     if (displayName != null && displayName.isNotEmpty) {
       await credential.user?.updateDisplayName(displayName);
     }
     return credential;
   }
 
+  // Sign out method para sa Firebase session
   Future<void> signOut() async {
     await firebaseAuth.signOut();
   }
 
+  // Function para ma-update yung display name / username sa Firebase
   Future<void> updateUsername({required String username}) async {
     if (currentUser != null) {
       await currentUser!.updateDisplayName(username);
+      // I-update din natin sa local storage para sync agad yung UI
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', username);
       await prefs.setString('firstName', username);
     }
   }
 
+  // Permanent account deletion: kailangan mag-reauthenticate muna para secure
   Future<void> deleteAccount({
     required String email,
     required String password,
@@ -78,12 +89,14 @@ class UserService {
       email: email,
       password: password,
     );
+    // Re-check muna password bago payagan i-delete
     await currentUser!.reauthenticateWithCredential(credential);
     await currentUser!.delete();
     await firebaseAuth.signOut();
-    await logout();
+    await logout(); // Linisin din yung local cache sa phone
   }
 
+  // Reset/Change password: kailangan ipasa yung old password at new password
   Future<void> resetPasswordFromCurrentPassword({
     required String currentPassword,
     required String newPassword,
@@ -93,13 +106,16 @@ class UserService {
       email: email,
       password: currentPassword,
     );
+    // Re-authenticate gamit lumang password para i-verify kung legit yung may-ari
     await currentUser!.reauthenticateWithCredential(credential);
+    // Pag verified, i-apply na yung new password sa Firebase
     await currentUser!.updatePassword(newPassword);
   }
 
   // --------------------------------------------------------------
-  // Login Type Helper: 'dummyjson' vs 'firebase' (Enhancement 2 & 3)
+  // Login Type Helper: 'dummyjson' vs 'firebase' (para sa Enhancement 2 & 3)
   // --------------------------------------------------------------
+  // Tinitignan kung anong klaseng account ang naka-login ngayon
   Future<String> getLoginType() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('loginType') ??

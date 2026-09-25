@@ -4,11 +4,11 @@ import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 // ==============================================================
-// ENHANCEMENT 3: Profile Screen
-// • Fetch user data via UserService().getUserData().
-// • Show user details depending on the LoginType().
-// • Allow update username, change password, delete account (Firebase).
-// • Include Logout -> clears session and redirects to sign in.
+// ENHANCEMENT 3: Profile Screen (Page 18 ng PDF)
+// • Kinukuha yung user data via UserService().getUserData()
+// • Nag-aadjust yung itsura base sa LoginType() (Firebase vs DummyJSON)
+// • May options para mag-Update Username, Change Password, at Delete Account
+// • May Log Out button na nagki-clear ng session pabalik sa /signin
 // ==============================================================
 
 class ProfileScreen extends StatefulWidget {
@@ -39,10 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  // --------------------------------------------------------------
-  // ENHANCEMENT 3: Fetch user data via UserService().getUserData()
-  // and determine UI layout depending on LoginType()
-  // --------------------------------------------------------------
+  // Dito natin chine-check yung login type at kinukuha yung user profile
   Future<void> _loadUserData() async {
     try {
       final type = await _userService.getLoginType();
@@ -64,9 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // --------------------------------------------------------------
-  // ENHANCEMENT 3: Dialog to Update Username
-  // --------------------------------------------------------------
+  // Dialog para makapag-palit ng username si Firebase user
   void _showUpdateUsernameDialog() {
     final TextEditingController usernameController = TextEditingController(
       text: _userData?['username']?.toString() ?? '',
@@ -158,9 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --------------------------------------------------------------
-  // ENHANCEMENT 3: Dialog to Change Password
-  // --------------------------------------------------------------
+  // Dialog para sa Change Password: humihingi ng lumang password at bagong password
   void _showChangePasswordDialog() {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
@@ -268,9 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --------------------------------------------------------------
-  // ENHANCEMENT 3: Dialog to Delete Account
-  // --------------------------------------------------------------
+  // Dialog para sa permanent account deletion (may password confirmation bago burahin)
   void _showDeleteAccountDialog() {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -369,9 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --------------------------------------------------------------
-  // Logout handler
-  // --------------------------------------------------------------
+  // Logout handler: nagtatanong muna ng confirmation bago mag-clear ng session
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,

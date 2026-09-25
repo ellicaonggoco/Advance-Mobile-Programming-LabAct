@@ -7,14 +7,15 @@ import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 // ==============================================================
-// ENHANCEMENT 3: Settings page
-// - Dark/Light mode switch
-// - Include Logout in settings -> back to login
+// ENHANCEMENT 3: Settings Screen (Page 18 ng PDF)
+// - Switch para sa Dark Mode / Light Mode
+// - Logout button na nagki-clear ng session pabalik sa login
 // ==============================================================
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  // Handler para sa Logout sa loob ng settings
   Future<void> _handleLogout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
