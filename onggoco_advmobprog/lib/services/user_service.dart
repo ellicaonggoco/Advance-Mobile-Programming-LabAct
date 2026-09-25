@@ -37,8 +37,8 @@ class UserService {
     await prefs.setString(
         'username', credential.user?.displayName ?? email.split('@').first);
     await prefs.setString(
-        'firstName', credential.user?.displayName ?? 'Firebase');
-    await prefs.setString('lastName', 'User');
+        'firstName', credential.user?.displayName ?? email.split('@').first);
+    await prefs.setString('lastName', '');
     await prefs.setString('token', credential.user?.uid ?? '');
 
     return credential;
@@ -73,6 +73,7 @@ class UserService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', username);
       await prefs.setString('firstName', username);
+      await prefs.setString('lastName', '');
     }
   }
 
@@ -173,17 +174,19 @@ class UserService {
     final loginType = await getLoginType();
 
     if (loginType == 'firebase' && currentUser != null) {
+      final name = currentUser?.displayName ??
+          prefs.getString('firstName') ??
+          currentUser?.email?.split('@').first ??
+          'User';
       return {
         'id': 0,
         'username': currentUser?.displayName ??
             prefs.getString('username') ??
             currentUser?.email?.split('@').first ??
-            'Firebase User',
+            'user',
         'email': currentUser?.email ?? prefs.getString('email') ?? '',
-        'firstName': currentUser?.displayName ??
-            prefs.getString('firstName') ??
-            'Firebase',
-        'lastName': prefs.getString('lastName') ?? 'User',
+        'firstName': name,
+        'lastName': '',
         'gender': 'N/A',
         'image': currentUser?.photoURL ?? '',
         'accessToken': currentUser?.uid ?? '',

@@ -447,10 +447,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final data = _userData ?? {};
     final isFirebase = _loginType == 'firebase';
 
-    final displayName = (data['firstName'] != null &&
-            data['firstName'].toString().isNotEmpty)
-        ? '${data['firstName']} ${data['lastName'] ?? ''}'.trim()
-        : (data['username'] ?? 'User');
+    final displayName = isFirebase
+        ? ((data['firstName'] != null &&
+                data['firstName'].toString().isNotEmpty)
+            ? data['firstName'].toString()
+            : (data['username'] ?? 'User'))
+        : ((data['firstName'] != null &&
+                data['firstName'].toString().isNotEmpty)
+            ? '${data['firstName']} ${data['lastName'] ?? ''}'.trim()
+            : (data['username'] ?? 'User'));
     final username = data['username']?.toString() ?? 'user';
     final email = data['email']?.toString() ?? 'No email';
     final gender = data['gender']?.toString() ?? 'N/A';
