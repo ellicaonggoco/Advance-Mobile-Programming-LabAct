@@ -3,11 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
-// ==============================================================
-// ENHANCEMENT 2: Sign-in Screen (Page 18 ng PDF)
-// Smart login: Kusa niyang ina-analyze kung email (Firebase Auth)
-// or username lang (DummyJSON). Walang awkward toggle para realistic!
-// ==============================================================
+// signin screen: auto-detect na lang kung email o username para di mukhang ewan yung may switch button haha
+// pag may @ rekta firebase auth, pag wala dummyjson agad
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -18,7 +15,7 @@ class SigninScreen extends StatefulWidget {
 
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // Iisang field para sa username o email
+  // iisang textfield na lang para sa email o username
   final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -32,7 +29,7 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
-  // Dito yung smart login logic natin
+  // login logic: auto-detect lang dito
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -47,14 +44,14 @@ class _SigninScreenState extends State<SigninScreen> {
       Map<String, dynamic> responseData;
 
       if (identifier.contains('@')) {
-        // May '@' -> Firebase email account to! Tawagin yung Firebase Auth SDK
+        // may @ kaya rekta firebase to gamit email
         await userService.value.signIn(
           email: identifier,
           password: password,
         );
         responseData = await userService.value.getUserData();
       } else {
-        // Walang '@' -> DummyJSON username to (e.g. emilys), tawagin yung REST API
+        // username lang tinype so dummyjson account to (tulad nung emilys)
         responseData = await userService.value.loginUser(
           identifier,
           password,

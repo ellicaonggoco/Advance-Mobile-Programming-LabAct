@@ -4,12 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
-// ==============================================================
-// ENHANCEMENT 2: UI para sa Sign Up Screen (Page 18 ng PDF)
-// Required na 7 fields:
-// 1. fName, 2. lName, 3. age, 4. contactNo, 5. username, 6. emailAddress, 7. password
-// Tinatawag nito yung createAccount() ng UserService para sa Firebase
-// ==============================================================
+// signup screen to, 7 fields daw sabi ni sir bawal kulang
+// rekta gawa account sa firebase auth
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -21,7 +17,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Text controllers para sa 7 required fields
+  // controllers para sa form
   final TextEditingController _fNameController = TextEditingController();
   final TextEditingController _lNameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
@@ -49,7 +45,7 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  // Dito yung registration logic: validate muna bago i-send sa Firebase Auth
+  // pag pinindot register button, check muna kung kumpleto bago bato sa firebase
   void _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -63,7 +59,7 @@ class _SignupScreenState extends State<SignupScreen> {
         '${_fNameController.text.trim()} ${_lNameController.text.trim()}'.trim();
 
     try {
-      // Tawagin yung createAccount method sa UserService
+      // rekta create account sa firebase auth
       await userService.value.createAccount(
         email: email,
         password: password,
@@ -76,7 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = false;
       });
 
-      // Show success message at lipat sa login screen
+      // pop up na success sabay balik sa sign in para makapag-login na
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:

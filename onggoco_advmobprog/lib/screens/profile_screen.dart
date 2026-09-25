@@ -3,13 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
-// ==============================================================
-// ENHANCEMENT 3: Profile Screen (Page 18 ng PDF)
-// • Kinukuha yung user data via UserService().getUserData()
-// • Nag-aadjust yung itsura base sa LoginType() (Firebase vs DummyJSON)
-// • May options para mag-Update Username, Change Password, at Delete Account
-// • May Log Out button na nagki-clear ng session pabalik sa /signin
-// ==============================================================
+// profile screen to, kusa nag-iiba itsura depende kung firebase o dummyjson user
+// pag firebase may extra buttons para mag-update username, change password, tsaka delete account
 
 class ProfileScreen extends StatefulWidget {
   final dynamic initialUser;
@@ -39,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  // Dito natin chine-check yung login type at kinukuha yung user profile
+  // check natin kung anong login type tapos load yung user info
   Future<void> _loadUserData() async {
     try {
       final type = await _userService.getLoginType();
@@ -61,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Dialog para makapag-palit ng username si Firebase user
+  // pop-up para makapag-palit ng username
   void _showUpdateUsernameDialog() {
     final TextEditingController usernameController = TextEditingController(
       text: _userData?['username']?.toString() ?? '',
@@ -153,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Dialog para sa Change Password: humihingi ng lumang password at bagong password
+  // pop-up para makapag-change pass, hingi muna old pass
   void _showChangePasswordDialog() {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
@@ -261,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Dialog para sa permanent account deletion (may password confirmation bago burahin)
+  // pop-up para sa delete account, hingi password para sure
   void _showDeleteAccountDialog() {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -360,7 +355,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Logout handler: nagtatanong muna ng confirmation bago mag-clear ng session
+  // logout dialog sabay lipat pabalik sign in screen
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
