@@ -1,17 +1,60 @@
-// -------------------------------------------------------------- 
-// -------------------------------------------------------------- 
-// ENHANCEMENT 3: Settings page for dark/light mode switch
-// -------------------------------------------------------------- 
-// -------------------------------------------------------------- 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/theme_provider.dart';
+import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
+
+// ==============================================================
+// ENHANCEMENT 3: Settings page
+// - Dark/Light mode switch
+// - Include Logout in settings -> back to login
+// ==============================================================
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: const CustomText(
+          text: 'Confirm Logout',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        content: const CustomText(
+          text: 'Are you sure you want to log out and return to the login screen?',
+          fontSize: 14,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await UserService().logout();
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/signin',
+        (route) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +71,11 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.all(16.w),
         children: [
+          // Theme Switch
           Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
             child: SwitchListTile(
               secondary: Icon(
                 themeProvider.isDark ? Icons.dark_mode : Icons.light_mode,
@@ -49,6 +96,33 @@ class SettingsScreen extends StatelessWidget {
               onChanged: (_) {
                 themeProvider.toggleTheme();
               },
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // Logout Option (Enhancement 3)
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: ListTile(
+              leading: Icon(
+                Icons.logout,
+                color: const Color(0xFFFF5757),
+                size: 24.sp,
+              ),
+              title: CustomText(
+                text: 'Log Out',
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFFF5757),
+              ),
+              subtitle: CustomText(
+                text: 'Clears user session and returns to login',
+                fontSize: 12.sp,
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => _handleLogout(context),
             ),
           ),
         ],

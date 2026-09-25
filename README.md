@@ -253,3 +253,118 @@ In this activity, the **Service-Model-Provider** architectural pattern is upgrad
 - **Enhancement 2**: Built branded UI for `signin_screen.dart` with username/password validation, `_login()` authentication handling, SnackBar notifications, and demo credentials assistance.
 - **Enhancement 3**: Created `models/user.dart` and implemented `profile_screen.dart` showcasing avatar, name, handle, email, gender, user ID, and a functional log out routine. Configured `CartProvider` and `HomeScreen` to dynamically fetch and render the user's specific cart by `userId`.
 
+---
+
+# Lab Activity 5: Firebase Authentication & Account Management
+
+## Discussion
+
+### 1. Workflow for DummyJSON vs Firebase Implementation (From signIn to signUp)
+
+#### A. DummyJSON Workflow
+1. **Sign-In (`/signin`)**:
+   - The user inputs their `username` (e.g., `emilys`) and `password` (e.g., `emilyspass`).
+   - The app sends an HTTP `POST` request to `https://dummyjson.com/auth/login` with `{'Content-Type': 'application/json'}` and body containing `username` and `password`.
+   - DummyJSON validates the static test credentials and responds with HTTP `200 OK` containing a mock JWT `accessToken`, `refreshToken`, and user attributes (e.g., id, firstName, lastName, email, gender, image).
+   - `UserService.saveUserData()` writes these credentials into local persistent storage using `SharedPreferences`, and sets `loginType` to `'dummyjson'`.
+   - The user is redirected to `/home`, and the cart is dynamically fetched using the numeric `userId`.
+2. **Sign-Up (`/signup`)**:
+   - DummyJSON is a simulated mock REST API without a stateful database or persistent backend user store. Registering a user against DummyJSON via `POST /users/add` only mirrors back a mock object without actually creating an active authentication entry or verifying credentials for subsequent logins.  
+   *(Sa DummyJSON, simulated lamang ang backend. Kapag nag-login, nagpapadala ng HTTP POST sa dummyjson API at nagbabalik ng fake JWT token. Walang totoong persistent user registration dahil mock server lamang ito.)*
+
+#### B. Firebase Authentication Workflow
+1. **Sign-Up (`/signup`)**:
+   - The user navigates to `SignupScreen` featuring 7 required input fields:
+     - `fName` (First Name)
+     - `lName` (Last Name)
+     - `age` (Age, numeric validation)
+     - `contactNo` (Contact Number, phone format)
+     - `username` (Username, minimum 3 characters)
+     - `emailAddress` (Email, RFC regex format validation)
+     - `password` (Password, minimum 6 characters with confirmation check)
+   - When the user taps **Register Account**, `_handleSignUp()` validates all form fields and triggers:
+     ```dart
+     await userService.value.createAccount(
+       email: email,
+       password: password,
+       displayName: fullName,
+     );
+     ```
+   - This invokes `FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password)` under the hood. Firebase securely provisions a new account in the cloud, creates a unique `UID`, hashes the password with secure cryptographic algorithms, and applies the user's `displayName`.
+   - A success SnackBar confirms registration, and the app routes the user to `SigninScreen`.
+2. **Sign-In (`/signin`)**:
+   - The user toggles to the **Firebase Auth** tab and provides their registered `email` and `password`.
+   - Tapping **Log In** invokes:
+     ```dart
+     await userService.value.signIn(
+       email: email,
+       password: password,
+     );
+     ```
+   - Firebase securely authenticates the user credentials, manages automatic token refresh cycles, and exposes the authenticated user through `FirebaseAuth.instance.currentUser`.
+   - `UserService.signIn()` sets `loginType` to `'firebase'` and synchronizes account details to `SharedPreferences` for fast startup retrieval.
+   - The user is navigated to `/home`.  
+   *(Sa Firebase Authentication, mayroon tayong totoong cloud backend sa Google. Sa registration, nire-record agad ang bagong account gamit ang createUserWithEmailAndPassword. Pag nag-login naman gamit ang signInWithEmailAndPassword, pinapatunayan ng Firebase ang credentials at nagbibigay ng secure token na awtomatikong nagre-refresh.)*
+
+---
+
+### 2. Main Idea for the `UserService` Implementation
+
+The main architectural idea of the `UserService` is to serve as an **Abstraction and Facade Pattern** for user management and authentication:
+
+1. **Centralized Facade & Separation of Concerns**:
+   - The UI screens (`signin_screen.dart`, `signup_screen.dart`, `profile_screen.dart`, `settings_screen.dart`, and `splash_screen.dart`) never contain direct backend networking or low-level SDK implementation details.
+   - All authentication actions—whether communicating with a REST API via `http.post` or with Google's Cloud Authentication service via `FirebaseAuth`—are encapsulated cleanly inside `UserService`.
+
+2. **Reactive Single Source of Truth**:
+   - Instantiated as a global `ValueNotifier<UserService> userService = ValueNotifier(UserService())`, allowing the entire widget tree to reactively listen or call authentication methods directly:
+     - `signIn({required String email, required String password})`
+     - `createAccount({required String email, required String password, String? displayName})`
+     - `signOut()`
+     - `updateUsername({required String username})`
+     - `deleteAccount({required String email, required String password})`
+     - `resetPasswordFromCurrentPassword({required String currentPassword, required String newPassword, required String email})`
+     - `getUserData()` and `getUser()`
+     - `isLoggedIn()`
+     - `logout()`
+
+3. **Hybrid Authentication Management**:
+   - `UserService` seamlessly differentiates between DummyJSON users and Firebase authenticated users via `getLoginType()` and `setLoginType(type)`.
+   - When `getUserData()` is called, it inspects `loginType`:
+     - If `'firebase'`, it extracts live data from `FirebaseAuth.instance.currentUser` (such as `email`, `displayName`, and `uid`).
+     - If `'dummyjson'`, it extracts the stored JSON attributes from `SharedPreferences`.
+   - This ensures the UI remains completely agnostic of the underlying auth provider.  
+   *(Ang pangunahing ideya ng UserService ay maging iisang sentro o controller para sa lahat ng authentication logic. Hindi kailangang malaman ng UI kung paano nagwo-work ang Firebase o REST API; tumatawag lang ito sa UserService methods tulad ng signIn(), createAccount(), at updateUsername().)*
+
+---
+
+### 3. Benefits of the Firebase Implementation on the Current Laboratory (Flutter Application)
+
+1. **Production-Grade Security & Encryption**:
+   - Firebase Authentication handles end-to-end credential security, zero-plaintext storage, salted hashing, and rate-limiting against brute force attacks out of the box, which mock APIs cannot provide.
+2. **Automatic Token Lifecycle Management**:
+   - Unlike basic REST endpoints where expired JWT tokens require manual refresh interceptors, the Firebase SDK automatically refreshes user ID tokens silently in the background.
+3. **Reactive Real-Time Auth State**:
+   - Firebase exposes the `authStateChanges()` stream, allowing Flutter apps to react immediately to auth events (login, logout, session expiration, token revocation) anywhere in the application.
+4. **Native Self-Service Account Management**:
+   - Allows users to directly update their profile (`updateDisplayName`), securely update their password (`updatePassword` with reauthentication), and permanently delete their account (`delete()`) through secure cloud APIs without needing to write custom backend endpoints.
+5. **Cross-Platform Scalability**:
+   - By configuring Firebase via FlutterFire CLI (`lib/firebase_options.dart`), the Flutter application supports Android, iOS, and Web with native SDK bindings, laying the foundation for additional Firebase cloud services such as Cloud Firestore, Cloud Storage, and Push Notifications.  
+   *(Napakalaking tulong ng Firebase dahil tunay itong cloud backend na may matibay na security, automatic token refresh, real-time auth streams, at mga built-in functions para sa pag-update ng username, pagpapalit ng password, at pag-delete ng account nang hindi na kailangan gumawa ng sariling server.)*
+
+---
+
+### Enhancements Implemented Summary:
+- **Enhancement 1: UserService Functions**:
+  - Implemented `signIn`, `createAccount`, `signOut`, `updateUsername`, `deleteAccount`, and `resetPasswordFromCurrentPassword` using `FirebaseAuth.instance`.
+  - Added session cleanup on `logout()` and `deleteAccount()`.
+- **Enhancement 2: Dummy JSON vs Firebase Auth**:
+  - Created `screens/signup_screen.dart` featuring 7 required fields: `fName`, `lName`, `age`, `contactNo`, `username`, `emailAddress`, and `password` (with validation and confirmation).
+  - Updated `screens/signin_screen.dart` with a dual-mode toggle for DummyJSON and Firebase Auth, password visibility toggles, and seamless navigation to Sign Up.
+  - Registered `/signup` route in `lib/main.dart`.
+- **Enhancement 3: Profile Screen & Settings**:
+  - Updated `screens/profile_screen.dart` to fetch data via `UserService().getUserData()` and display contextual information based on `LoginType()`.
+  - Added dialogs in `ProfileScreen` for Firebase users to **Update Username**, **Change Password**, and **Delete Account**.
+  - Integrated a functional **Log Out** button in `screens/settings_screen.dart` that clears stored sessions and returns to `/signin`.
+
+

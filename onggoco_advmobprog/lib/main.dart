@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // screens
 import 'screens/cart_screen.dart';
@@ -11,6 +13,7 @@ import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/signin_screen.dart';
+import 'screens/signup_screen.dart';
 import 'screens/splash_screen.dart';
 
 // providers
@@ -26,6 +29,13 @@ void main() async {
         await dotenv.load(fileName: 'assets/.env');
       } catch (e) {
         // Fallback if .env is missing during tests
+      }
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (e) {
+        debugPrint('Firebase init error: $e');
       }
       runApp(const OnggocoAdvMobProg());
     },
@@ -60,6 +70,8 @@ class OnggocoAdvMobProg extends StatelessWidget {
               '/splash': (context) => const SplashScreen(),
               // ENHANCEMENT 2: Sign-in screen with login & auth logic
               '/signin': (context) => const SigninScreen(),
+              // ENHANCEMENT 2: Sign-up screen with Firebase Auth logic
+              '/signup': (context) => const SignupScreen(),
               // Main Home Catalog & Navigation
               '/home': (context) => const HomeScreen(),
               // Standalone Cart route

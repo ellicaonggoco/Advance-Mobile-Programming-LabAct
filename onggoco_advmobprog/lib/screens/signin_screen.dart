@@ -4,8 +4,10 @@ import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 // ==============================================================
-// ENHANCEMENT 2: Make your own UI for the sign_screen
-// implementing the user_service and the authentication logic above.
+// ENHANCEMENT 2: Dummy JSON vs Firebase Auth
+// - DummyJSON: API call (https://dummyjson.com/auth/login)
+// - Firebase: Use FirebaseAuth SDK, token refresh, security rules
+// - Toggle between DummyJSON and Firebase authentication
 // ==============================================================
 
 class SigninScreen extends StatefulWidget {
@@ -18,60 +20,103 @@ class SigninScreen extends StatefulWidget {
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  int _selectedAuthIndex = 0; // 0: DummyJSON, 1: Firebase
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // --------------------------------------------------------------
-  // ENHANCEMENT 2: Authentication logic invoking UserService
-  // and persisting user session into SharedPreferences.
-  // --------------------------------------------------------------
   void _login() async {
-    UserService userService = UserService();
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
 
-    if (_formKey.currentState!.validate()) {
-      try {
-        final response = await userService.loginUser(
+    try {
+      Map<String, dynamic> responseData;
+
+      if (_selectedAuthIndex == 0) {
+        // DummyJSON Auth
+        responseData = await userService.value.loginUser(
           _usernameController.text.trim(),
           _passwordController.text.trim(),
         );
-
-        // Save user data to SharedPreferences
-        await userService.saveUserData(response);
-
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
-
-        Navigator.pushReplacementNamed(context, '/home', arguments: response);
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red.shade700,
-          ),
+      } else {
+        // Firebase Auth
+        await userService.value.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
+        responseData = await userService.value.getUserData();
       }
-    } else {
+
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
+
+      Navigator.pushReplacementNamed(context, '/home', arguments: responseData);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+
+      String errorMessage =
+          e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      if (errorMessage.startsWith('Exception:')) {
+        errorMessage = errorMessage.replaceFirst('Exception:', '').trim();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login failed: $errorMessage'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
     }
+  }
+
+  InputDecoration _buildInputDecoration({
+    required String label,
+    required bool isDark,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      suffixIcon: suffixIcon,
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 16.w,
+        vertical: 14.h,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(
+          color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(
+          color: Color(0xFF354593),
+          width: 1.5,
+        ),
+      ),
+    );
   }
 
   @override
@@ -90,7 +135,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Welcome Header with inline NU logo matching Sample Output exactly
+                  // Welcome Header with inline NU logo
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -108,86 +153,166 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 36.h),
+                  SizedBox(height: 24.h),
 
-                  // Username field (no prefix icon, clean outline matching Sample Output)
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 14.h,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade400,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF354593),
-                          width: 1.5,
-                        ),
-                      ),
+                  // Auth Method Selector Segmented Control (DummyJSON vs Firebase)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your username';
-                      }
-                      return null;
-                    },
+                    padding: EdgeInsets.all(4.r),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAuthIndex = 0;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: _selectedAuthIndex == 0
+                                    ? const Color(0xFF354593)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: CustomText(
+                                  text: 'DummyJSON',
+                                  fontSize: 13.sp,
+                                  fontWeight: _selectedAuthIndex == 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedAuthIndex == 0
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAuthIndex = 1;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: _selectedAuthIndex == 1
+                                    ? const Color(0xFF354593)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: CustomText(
+                                  text: 'Firebase Auth',
+                                  fontSize: 13.sp,
+                                  fontWeight: _selectedAuthIndex == 1
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedAuthIndex == 1
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 18.h),
+                  SizedBox(height: 24.h),
 
-                  // Password field (no prefix icon, no suffix icon, clean outline matching Sample Output)
+                  // Input Fields
+                  if (_selectedAuthIndex == 0) ...[
+                    // DummyJSON requires Username
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: _buildInputDecoration(
+                        label: 'Username',
+                        isDark: isDark,
+                      ),
+                      validator: (value) {
+                        if (_selectedAuthIndex == 0 &&
+                            (value == null || value.trim().isEmpty)) {
+                          return 'Please enter your username';
+                        }
+                        return null;
+                      },
+                    ),
+                  ] else ...[
+                    // Firebase requires Email
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _buildInputDecoration(
+                        label: 'Email Address',
+                        isDark: isDark,
+                      ),
+                      validator: (value) {
+                        if (_selectedAuthIndex == 1 &&
+                            (value == null || value.trim().isEmpty)) {
+                          return 'Please enter your email';
+                        }
+                        if (_selectedAuthIndex == 1 &&
+                            !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value!.trim())) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                  SizedBox(height: 16.h),
+
+                  // Password field
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 14.h,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade400,
+                    obscureText: _obscurePassword,
+                    decoration: _buildInputDecoration(
+                      label: 'Password',
+                      isDark: isDark,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          size: 20.sp,
                         ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF354593),
-                          width: 1.5,
-                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your password';
                       }
+                      if (_selectedAuthIndex == 1 && value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
                       return null;
                     },
                   ),
                   SizedBox(height: 24.h),
 
-                  // Log In button (capitalized Log In matching Sample Output)
+                  // Log In button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
@@ -217,6 +342,30 @@ class _SigninScreenState extends State<SigninScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
+                  ),
+                  SizedBox(height: 18.h),
+
+                  // Sign Up Link (Enhancement 2)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomText(
+                        text: "Don't have an account? ",
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/signup');
+                        },
+                        child: CustomText(
+                          text: 'Sign Up',
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF354593),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

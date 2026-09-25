@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../models/user.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 // ==============================================================
-// ENHANCEMENT 3: Using the user_service create your own user.dart
-// (model) implementing it on this project and rendering the data
-// on the profile_screen creating UI on it.
+// ENHANCEMENT 3: Profile Screen
+// • Fetch user data via UserService().getUserData().
+// • Show user details depending on the LoginType().
+// • Allow update username, change password, delete account (Firebase).
+// • Include Logout -> clears session and redirects to sign in.
 // ==============================================================
 
 class ProfileScreen extends StatefulWidget {
-  final User? initialUser;
-  const ProfileScreen({super.key, this.initialUser});
+  final dynamic initialUser;
+  final Map<String, dynamic>? initialUserData;
+  final bool isStandalone;
+
+  const ProfileScreen({
+    super.key,
+    this.initialUser,
+    this.initialUserData,
+    this.isStandalone = false,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -20,33 +29,33 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final UserService _userService = UserService();
-  User? _user;
+  Map<String, dynamic>? _userData;
+  String _loginType = 'dummyjson';
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialUser != null) {
-      _user = widget.initialUser;
-      _isLoading = false;
-    } else {
-      _loadUserData();
-    }
+    _loadUserData();
   }
 
   // --------------------------------------------------------------
-  // ENHANCEMENT 3: Retrieve saved user model from UserService
+  // ENHANCEMENT 3: Fetch user data via UserService().getUserData()
+  // and determine UI layout depending on LoginType()
   // --------------------------------------------------------------
   Future<void> _loadUserData() async {
     try {
-      final user = await _userService.getUser();
+      final type = await _userService.getLoginType();
+      final data = await _userService.getUserData();
+
       if (mounted) {
         setState(() {
-          _user = user;
+          _loginType = type;
+          _userData = data;
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -56,12 +65,320 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // --------------------------------------------------------------
-  // ENHANCEMENT 3: Logout handler clearing SharedPreferences
+  // ENHANCEMENT 3: Dialog to Update Username
+  // --------------------------------------------------------------
+  void _showUpdateUsernameDialog() {
+    final TextEditingController usernameController = TextEditingController(
+      text: _userData?['username']?.toString() ?? '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: const CustomText(
+          text: 'Update Username',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CustomText(
+                text: 'Enter your new display username:',
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 14.h),
+              TextFormField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return 'Username cannot be empty';
+                  }
+                  if (val.trim().length < 3) {
+                    return 'Minimum 3 characters';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF354593),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final newUsername = usernameController.text.trim();
+                Navigator.pop(ctx);
+                try {
+                  await _userService.updateUsername(username: newUsername);
+                  await _loadUserData();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Username updated successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to update username: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------
+  // ENHANCEMENT 3: Dialog to Change Password
+  // --------------------------------------------------------------
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: const CustomText(
+          text: 'Change Password',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: currentPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'Current password required';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'New password required';
+                  }
+                  if (val.length < 6) {
+                    return 'Minimum 6 characters';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF354593),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final currentPwd = currentPasswordController.text;
+                final newPwd = newPasswordController.text;
+                final email = _userData?['email']?.toString() ?? '';
+                Navigator.pop(ctx);
+                try {
+                  await _userService.resetPasswordFromCurrentPassword(
+                    currentPassword: currentPwd,
+                    newPassword: newPwd,
+                    email: email,
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password changed successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to change password: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------
+  // ENHANCEMENT 3: Dialog to Delete Account
+  // --------------------------------------------------------------
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: const CustomText(
+          text: 'Delete Account',
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.red,
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const CustomText(
+                text:
+                    'This action is irreversible. Please enter your password to confirm account deletion:',
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 14.h),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'Password is required to delete account';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final pwd = passwordController.text;
+                final email = _userData?['email']?.toString() ?? '';
+                Navigator.pop(ctx);
+                try {
+                  await _userService.deleteAccount(
+                    email: email,
+                    password: pwd,
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Account permanently deleted.'),
+                      backgroundColor: Colors.black87,
+                    ),
+                  );
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/signin',
+                    (route) => false,
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete account: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------
+  // Logout handler
   // --------------------------------------------------------------
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: const CustomText(
           text: 'Confirm Logout',
           fontSize: 18,
@@ -135,8 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildContent(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -144,26 +460,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final user = _user;
-    final displayName = (user != null && user.firstName.isNotEmpty)
-        ? user.fullName
-        : 'Emily Johnson';
-    final username =
-        (user != null && user.username.isNotEmpty) ? user.username : 'emilys';
-    final email = (user != null && user.email.isNotEmpty)
-        ? user.email
-        : 'emily.johnson@x.dummyjson.com';
-    final gender =
-        (user != null && user.gender.isNotEmpty) ? user.gender : 'female';
-    final userId = (user != null && user.id > 0) ? '${user.id}' : '1';
-    final imageUrl = user?.image ?? '';
+    final data = _userData ?? {};
+    final isFirebase = _loginType == 'firebase';
+
+    final displayName = (data['firstName'] != null &&
+            data['firstName'].toString().isNotEmpty)
+        ? '${data['firstName']} ${data['lastName'] ?? ''}'.trim()
+        : (data['username'] ?? 'User');
+    final username = data['username']?.toString() ?? 'user';
+    final email = data['email']?.toString() ?? 'No email';
+    final gender = data['gender']?.toString() ?? 'N/A';
+    final userId = (data['id'] != null && data['id'] != 0)
+        ? '#${data['id']}'
+        : (data['token'] != null && data['token'].toString().isNotEmpty
+            ? '${data['token'].toString().substring(0, (data['token'].toString().length > 10 ? 10 : data['token'].toString().length))}...'
+            : '#1');
+    final imageUrl = data['image']?.toString() ?? '';
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Profile Header Card matching Sample Output
+          // Profile Header Card
           Container(
             padding: EdgeInsets.symmetric(vertical: 24.h),
             decoration: BoxDecoration(
@@ -179,7 +498,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                // User Avatar
+                // Avatar
                 Container(
                   width: 76.w,
                   height: 76.w,
@@ -198,15 +517,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Color(0xFF354593),
                             ),
                           )
-                        : Image.network(
-                            'https://dummyjson.com/icon/emilys/128',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                              Icons.person,
-                              size: 48,
-                              color: Color(0xFF354593),
-                            ),
+                        : const Icon(
+                            Icons.person,
+                            size: 48,
+                            color: Color(0xFF354593),
                           ),
                   ),
                 ),
@@ -219,19 +533,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
                 SizedBox(height: 4.h),
-                // Username handle in gold/yellow
+                // Username handle
                 CustomText(
                   text: '@$username',
                   fontSize: 13.sp,
                   color: const Color(0xFFF5A623),
                   fontWeight: FontWeight.w600,
                 ),
+                SizedBox(height: 8.h),
+                // Login Type Badge
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: isFirebase
+                        ? const Color(0xFFF5A623).withValues(alpha: 0.15)
+                        : const Color(0xFF354593).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: CustomText(
+                    text: isFirebase
+                        ? '🔥 Firebase Auth Account'
+                        : '🌐 DummyJSON Account',
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isFirebase
+                        ? const Color(0xFFF5A623)
+                        : const Color(0xFF354593),
+                  ),
+                ),
               ],
             ),
           ),
           SizedBox(height: 16.h),
 
-          // User Information Details Card matching Sample Output
+          // User Information Details Card (depends on loginType)
           Container(
             decoration: BoxDecoration(
               color: isDark ? theme.cardColor : Colors.white,
@@ -259,31 +595,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   endIndent: 16.w,
                   color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
                 ),
-                _buildInfoRow(
-                  icon: Icons.people_outline,
-                  label: 'Gender',
-                  value: gender,
-                  context: context,
-                ),
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  indent: 16.w,
-                  endIndent: 16.w,
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                ),
+                if (!isFirebase) ...[
+                  _buildInfoRow(
+                    icon: Icons.people_outline,
+                    label: 'Gender',
+                    value: gender,
+                    context: context,
+                  ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 16.w,
+                    endIndent: 16.w,
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                  ),
+                ],
                 _buildInfoRow(
                   icon: Icons.badge_outlined,
-                  label: 'User ID',
-                  value: '#$userId',
+                  label: isFirebase ? 'Account ID' : 'User ID',
+                  value: userId,
                   context: context,
                 ),
               ],
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
-          // Log Out Button matching Sample Output
+          // Firebase Account Management Actions (Enhancement 3)
+          if (isFirebase) ...[
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? theme.cardColor : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.edit, color: Color(0xFF354593)),
+                    title: const CustomText(
+                      text: 'Update Username',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    subtitle: const CustomText(
+                      text: 'Change your Firebase display name',
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showUpdateUsernameDialog,
+                  ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 16.w,
+                    endIndent: 16.w,
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                  ),
+                  ListTile(
+                    leading:
+                        const Icon(Icons.lock_reset, color: Color(0xFFF5A623)),
+                    title: const CustomText(
+                      text: 'Change Password',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    subtitle: const CustomText(
+                      text: 'Update your Firebase login password',
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showChangePasswordDialog,
+                  ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: 16.w,
+                    endIndent: 16.w,
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                  ),
+                  ListTile(
+                    leading:
+                        const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const CustomText(
+                      text: 'Delete Account',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.red,
+                    ),
+                    subtitle: const CustomText(
+                      text: 'Permanently remove Firebase account',
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showDeleteAccountDialog,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+          ],
+
+          // Log Out Button
           ElevatedButton.icon(
             onPressed: _handleLogout,
             icon: const Icon(Icons.logout, color: Colors.white, size: 20),
@@ -307,5 +729,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isStandalone) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const CustomText(
+            text: 'Profile',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          centerTitle: true,
+        ),
+        body: _buildContent(context),
+      );
+    }
+    return _buildContent(context);
   }
 }

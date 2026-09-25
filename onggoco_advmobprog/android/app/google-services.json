@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "585707434003",
+    "project_id": "onggoco-advmblprog",
+    "storage_bucket": "onggoco-advmblprog.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585707434003:android:7f940a4751cc249e2ecfe6",
+        "android_client_info": {
+          "package_name": "com.example.flutter_lab1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwrwPszIrahteHEwaUGoUN-sljb7pLkL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
