@@ -7,7 +7,7 @@ import '../widgets/custom_text.dart';
 // ENHANCEMENT 2: Dummy JSON vs Firebase Auth
 // - DummyJSON: API call (https://dummyjson.com/auth/login)
 // - Firebase: Use FirebaseAuth SDK, token refresh, security rules
-// - Toggle between DummyJSON and Firebase authentication
+// - Seamless login: Auto-detects Firebase Email or DummyJSON Username
 // ==============================================================
 
 class SigninScreen extends StatefulWidget {
@@ -19,18 +19,15 @@ class SigninScreen extends StatefulWidget {
 
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  int _selectedAuthIndex = 0; // 0: DummyJSON, 1: Firebase
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -42,22 +39,25 @@ class _SigninScreenState extends State<SigninScreen> {
       _isLoading = true;
     });
 
+    final identifier = _identifierController.text.trim();
+    final password = _passwordController.text.trim();
+
     try {
       Map<String, dynamic> responseData;
 
-      if (_selectedAuthIndex == 0) {
-        // DummyJSON Auth
-        responseData = await userService.value.loginUser(
-          _usernameController.text.trim(),
-          _passwordController.text.trim(),
-        );
-      } else {
-        // Firebase Auth
+      if (identifier.contains('@')) {
+        // Authenticate with Firebase Auth SDK (PDF Page 18)
         await userService.value.signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+          email: identifier,
+          password: password,
         );
         responseData = await userService.value.getUserData();
+      } else {
+        // Authenticate with DummyJSON API (PDF Page 18)
+        responseData = await userService.value.loginUser(
+          identifier,
+          password,
+        );
       }
 
       if (!mounted) return;
@@ -153,130 +153,22 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 32.h),
 
-                  // Auth Method Selector Segmented Control (DummyJSON vs Firebase)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.grey.shade800
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12.r),
+                  // Single clean Email / Username field
+                  TextFormField(
+                    controller: _identifierController,
+                    decoration: _buildInputDecoration(
+                      label: 'Username or Email',
+                      isDark: isDark,
                     ),
-                    padding: EdgeInsets.all(4.r),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedAuthIndex = 0;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: EdgeInsets.symmetric(vertical: 10.h),
-                              decoration: BoxDecoration(
-                                color: _selectedAuthIndex == 0
-                                    ? const Color(0xFF354593)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Center(
-                                child: CustomText(
-                                  text: 'DummyJSON',
-                                  fontSize: 13.sp,
-                                  fontWeight: _selectedAuthIndex == 0
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: _selectedAuthIndex == 0
-                                      ? Colors.white
-                                      : (isDark
-                                          ? Colors.grey.shade300
-                                          : Colors.grey.shade700),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedAuthIndex = 1;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: EdgeInsets.symmetric(vertical: 10.h),
-                              decoration: BoxDecoration(
-                                color: _selectedAuthIndex == 1
-                                    ? const Color(0xFF354593)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Center(
-                                child: CustomText(
-                                  text: 'Firebase Auth',
-                                  fontSize: 13.sp,
-                                  fontWeight: _selectedAuthIndex == 1
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: _selectedAuthIndex == 1
-                                      ? Colors.white
-                                      : (isDark
-                                          ? Colors.grey.shade300
-                                          : Colors.grey.shade700),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your username or email';
+                      }
+                      return null;
+                    },
                   ),
-                  SizedBox(height: 24.h),
-
-                  // Input Fields
-                  if (_selectedAuthIndex == 0) ...[
-                    // DummyJSON requires Username
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: _buildInputDecoration(
-                        label: 'Username',
-                        isDark: isDark,
-                      ),
-                      validator: (value) {
-                        if (_selectedAuthIndex == 0 &&
-                            (value == null || value.trim().isEmpty)) {
-                          return 'Please enter your username';
-                        }
-                        return null;
-                      },
-                    ),
-                  ] else ...[
-                    // Firebase requires Email
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: _buildInputDecoration(
-                        label: 'Email Address',
-                        isDark: isDark,
-                      ),
-                      validator: (value) {
-                        if (_selectedAuthIndex == 1 &&
-                            (value == null || value.trim().isEmpty)) {
-                          return 'Please enter your email';
-                        }
-                        if (_selectedAuthIndex == 1 &&
-                            !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                .hasMatch(value!.trim())) {
-                          return 'Please enter a valid email address';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
                   SizedBox(height: 16.h),
 
                   // Password field
@@ -303,9 +195,6 @@ class _SigninScreenState extends State<SigninScreen> {
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your password';
-                      }
-                      if (_selectedAuthIndex == 1 && value.length < 6) {
-                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
