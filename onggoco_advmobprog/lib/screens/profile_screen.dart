@@ -540,28 +540,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: const Color(0xFFF5A623),
                   fontWeight: FontWeight.w600,
                 ),
-                SizedBox(height: 8.h),
-                // Login Type Badge
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: isFirebase
-                        ? const Color(0xFFF5A623).withValues(alpha: 0.15)
-                        : const Color(0xFF354593).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: CustomText(
-                    text: isFirebase
-                        ? '🔥 Firebase Auth Account'
-                        : '🌐 DummyJSON Account',
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isFirebase
-                        ? const Color(0xFFF5A623)
-                        : const Color(0xFF354593),
-                  ),
-                ),
               ],
             ),
           ),
