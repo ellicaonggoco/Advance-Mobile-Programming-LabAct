@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'cart_screen.dart';
+import 'chat_screen.dart';
 import 'product_screen.dart';
 import 'profile_screen.dart';
 import '../models/user.dart';
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : CustomText(
                   text: _selectedIndex == 1
-                      ? 'Cart'
+                      ? 'Chat'
                       : (_currentUser != null && _currentUser!.firstName.isNotEmpty
                           ? _currentUser!.firstName
                           : 'Emily'),
@@ -163,14 +163,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       : null,
                 ),
           actions: [
-            // Cart icon only shown on Shop catalog tab (tab 0)
-            if (_selectedIndex == 0)
-              IconButton(
-                icon: Icon(Icons.shopping_cart_outlined, size: 24.sp),
-                onPressed: () {
-                  _onItemTapped(1);
-                },
-              ),
+            // Cart icon opens the standalone CartScreen
+            IconButton(
+              icon: Icon(Icons.shopping_cart_outlined, size: 24.sp),
+              onPressed: () {
+                Navigator.pushNamed(context, '/cart');
+              },
+            ),
             // Access settings page from the top-right icon
             IconButton(
               icon: Icon(
@@ -195,16 +194,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Tab 0: Product catalog screen
             const ProductScreen(),
-            // Tab 1: Cart Screen (Enhancement 1 & 3)
-            const CartScreen(isStandalone: false),
+            // Tab 1: Chat List Screen (Lab Activity 6)
+            const ChatScreen(),
             // Tab 2: Profile Screen (Enhancement 3)
             ProfileScreen(initialUser: _currentUser),
           ],
         ),
-        // --------------------------------------------------------------
-        // ENHANCEMENT 2: Chat as FloatingActionButton, hidden when on cart_screen
-        // --------------------------------------------------------------
-        floatingActionButton: _buildFloatingActionButton(),
+        // Hide FAB on Chat screen (tab 1)
+        floatingActionButton: _selectedIndex == 1 ? null : _buildFloatingActionButton(),
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
@@ -214,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
           currentIndex: _selectedIndex,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), label: 'Shop'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
+            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
         ),

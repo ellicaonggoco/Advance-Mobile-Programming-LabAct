@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,6 +42,18 @@ class UserService {
     await prefs.setString('lastName', '');
     await prefs.setString('token', credential.user?.uid ?? '');
 
+    // siguraduhing nakalista sa Firestore Users collection para lumitaw sa Chat List
+    if (credential.user != null) {
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(credential.user!.uid)
+          .set({
+        'uid': credential.user!.uid,
+        'email': credential.user!.email ?? email,
+        'firstName': credential.user!.displayName ?? email.split('@').first,
+      }, SetOptions(merge: true));
+    }
+
     return credential;
   }
 
@@ -58,6 +71,19 @@ class UserService {
     if (displayName != null && displayName.isNotEmpty) {
       await credential.user?.updateDisplayName(displayName);
     }
+
+    // i-save din sa Firestore Users collection para makita ng ibang user sa chat
+    if (credential.user != null) {
+      await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(credential.user!.uid)
+          .set({
+        'uid': credential.user!.uid,
+        'email': credential.user!.email ?? email,
+        'firstName': displayName ?? email.split('@').first,
+      }, SetOptions(merge: true));
+    }
+
     return credential;
   }
 

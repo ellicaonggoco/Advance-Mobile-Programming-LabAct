@@ -3,8 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
-// signin screen: auto-detect na lang kung email o username para di mukhang ewan yung may switch button haha
-// pag may @ rekta firebase auth, pag wala dummyjson agad
+// signin screen: may dalawang login option (DummyJSON at Firebase Auth)
+// required to sa enhancement 2 para may toggle kung san magla-login si user
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -15,21 +15,25 @@ class SigninScreen extends StatefulWidget {
 
 class _SigninScreenState extends State<SigninScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // iisang textfield na lang para sa email o username
-  final TextEditingController _identifierController = TextEditingController();
+  // hiwalay controllers para sa username (dummyjson) at email (firebase)
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // 0: DummyJSON, 1: Firebase Auth
+  int _selectedAuthIndex = 0;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _identifierController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // login logic: auto-detect lang dito
+  // pag pinindot yung log in button, check natin kung anong tab yung active
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -37,25 +41,22 @@ class _SigninScreenState extends State<SigninScreen> {
       _isLoading = true;
     });
 
-    final identifier = _identifierController.text.trim();
-    final password = _passwordController.text.trim();
-
     try {
       Map<String, dynamic> responseData;
 
-      if (identifier.contains('@')) {
-        // may @ kaya rekta firebase to gamit email
+      if (_selectedAuthIndex == 0) {
+        // dummyjson login (username at pass lang tulad nung emilys / emilyspass)
+        responseData = await userService.value.loginUser(
+          _usernameController.text.trim(),
+          _passwordController.text.trim(),
+        );
+      } else {
+        // firebase login gamit email at password
         await userService.value.signIn(
-          email: identifier,
-          password: password,
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
         responseData = await userService.value.getUserData();
-      } else {
-        // username lang tinype so dummyjson account to (tulad nung emilys)
-        responseData = await userService.value.loginUser(
-          identifier,
-          password,
-        );
       }
 
       if (!mounted) return;
@@ -63,6 +64,7 @@ class _SigninScreenState extends State<SigninScreen> {
         _isLoading = false;
       });
 
+      // lipat na sa home screen tapos pasa yung user data
       Navigator.pushReplacementNamed(context, '/home', arguments: responseData);
     } catch (e) {
       if (!mounted) return;
@@ -133,7 +135,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Welcome Header with inline NU logo
+                  // Header logo at text
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -151,22 +153,132 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 32.h),
+                  SizedBox(height: 24.h),
 
-                  // Single clean Email / Username field
-                  TextFormField(
-                    controller: _identifierController,
-                    decoration: _buildInputDecoration(
-                      label: 'Username or Email',
-                      isDark: isDark,
+                  // dalawang option para sa login: DummyJSON vs Firebase Auth
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your username or email';
-                      }
-                      return null;
-                    },
+                    padding: EdgeInsets.all(4.r),
+                    child: Row(
+                      children: [
+                        // Option 1: DummyJSON
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAuthIndex = 0;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: _selectedAuthIndex == 0
+                                    ? const Color(0xFF354593)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: CustomText(
+                                  text: 'DummyJSON',
+                                  fontSize: 13.sp,
+                                  fontWeight: _selectedAuthIndex == 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedAuthIndex == 0
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Option 2: Firebase Auth
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedAuthIndex = 1;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: _selectedAuthIndex == 1
+                                    ? const Color(0xFF354593)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                              child: Center(
+                                child: CustomText(
+                                  text: 'Firebase Auth',
+                                  fontSize: 13.sp,
+                                  fontWeight: _selectedAuthIndex == 1
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedAuthIndex == 1
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  SizedBox(height: 24.h),
+
+                  // Fields na nagpapalit depende kung anong option pinili
+                  if (_selectedAuthIndex == 0) ...[
+                    // DummyJSON - Username ang kailangan
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: _buildInputDecoration(
+                        label: 'Username',
+                        isDark: isDark,
+                      ),
+                      validator: (value) {
+                        if (_selectedAuthIndex == 0 &&
+                            (value == null || value.trim().isEmpty)) {
+                          return 'Pakilagay yung username mo';
+                        }
+                        return null;
+                      },
+                    ),
+                  ] else ...[
+                    // Firebase - Email address ang kailangan
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _buildInputDecoration(
+                        label: 'Email Address',
+                        isDark: isDark,
+                      ),
+                      validator: (value) {
+                        if (_selectedAuthIndex == 1 &&
+                            (value == null || value.trim().isEmpty)) {
+                          return 'Pakilagay yung email mo';
+                        }
+                        if (_selectedAuthIndex == 1 &&
+                            !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value!.trim())) {
+                          return 'Valid na email ilagay mo';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                   SizedBox(height: 16.h),
 
                   // Password field
@@ -192,7 +304,10 @@ class _SigninScreenState extends State<SigninScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your password';
+                        return 'Pakilagay yung password mo';
+                      }
+                      if (_selectedAuthIndex == 1 && value.length < 6) {
+                        return 'At least 6 characters dapat password';
                       }
                       return null;
                     },
