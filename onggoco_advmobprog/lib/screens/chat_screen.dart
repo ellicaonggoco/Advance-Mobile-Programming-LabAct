@@ -23,17 +23,29 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadCurrentUserData();
+    _chatService.seedInitialUsersIfEmpty();
   }
 
   Future<void> _loadCurrentUserData() async {
+    final currentUser = userService.value.currentUser;
     final userData = await userService.value.getUserData();
     if (mounted) {
       setState(() {
-        _currentUserEmail = userData['email']?.toString() ??
-            userService.value.currentUser?.email;
-        _currentUserId = userService.value.currentUser?.uid ??
-            userData['token']?.toString();
+        _currentUserEmail = currentUser?.email ?? userData['email']?.toString();
+        _currentUserId = currentUser?.uid ?? userData['token']?.toString();
       });
+    }
+
+    if (currentUser != null) {
+      final name = currentUser.displayName ??
+          (userData['firstName'] != null && userData['firstName'].toString().isNotEmpty
+              ? userData['firstName'].toString()
+              : currentUser.email?.split('@').first);
+      await _chatService.saveUserRecord(
+        uid: currentUser.uid,
+        email: currentUser.email ?? '',
+        firstName: name,
+      );
     }
   }
 

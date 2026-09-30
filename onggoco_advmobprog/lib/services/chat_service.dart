@@ -87,4 +87,24 @@ class ChatService {
           : email.split('@').first,
     }, SetOptions(merge: true));
   }
+
+  // Pre-seed ng sample registered contacts kung walang ibang users
+  Future<void> seedInitialUsersIfEmpty() async {
+    try {
+      final snapshot = await _firestore.collection("Users").limit(2).get();
+      if (snapshot.docs.length < 2) {
+        await _firestore.collection("Users").doc("sample_user_cynthia").set({
+          'uid': 'sample_user_cynthia',
+          'email': 'cynthia@example.com',
+          'firstName': 'Cynthia Santos',
+        }, SetOptions(merge: true));
+
+        await _firestore.collection("Users").doc("sample_user_alex").set({
+          'uid': 'sample_user_alex',
+          'email': 'alex@example.com',
+          'firstName': 'Alex Cruz',
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {}
+  }
 }
